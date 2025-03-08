@@ -50,6 +50,24 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        'gradient-x': {
+          '0%, 100%': {
+            'background-position': '200% 0',
+          },
+          '50%': {
+            'background-position': '0 0',
+          },
+        },
+        blink: {
+          '0%, 100%': { color: 'purple' },
+          '50%': { color: 'green' },
+        }
+      },
+      animation: {
+        'gradient-x': 'gradient-x var(--animation-duration, 4s) linear infinite',
+        'blink': 'blink 1s infinite'
+      },
     },
     screens: {
       xs: "475px",

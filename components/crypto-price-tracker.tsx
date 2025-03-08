@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TOP_CRYPTOCURRENCIES, DEFAULT_CRYPTOCURRENCIES, CryptoCurrency } from "../data/cryptocurrencies"
+import { AnimatedGradientText } from "./animated-logo-text"
 
 type PriceData = {
   current_price: number
@@ -594,7 +595,16 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                 height={32}
                 priority
               />
-              <h1 className="text-xl font-bold sm:text-2xl">CryptoTick.live</h1>
+              <h1 className="text-xl font-bold sm:text-2xl">CryptoTick
+                <AnimatedGradientText
+                  className="text-sm font-bold"
+                  colorFrom="#00ff87"
+                  colorTo="#60a5fa"
+                  speed={6}
+                >
+                  <span className="animate-[blink_1s_infinite] text-md">.</span>
+                  live
+                </AnimatedGradientText></h1>
             </div>
             <div className="flex gap-2 items-center">
               <AudioController />
