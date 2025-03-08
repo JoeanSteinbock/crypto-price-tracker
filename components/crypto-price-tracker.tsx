@@ -615,7 +615,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                     variant="outline"
                     className="text-gray-900 bg-transparent border-gray-300 dark:border-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
-                    {selectedCrypto.name}
+                    {selectedCrypto.symbol.toUpperCase()}
                     <ChevronDown className="ml-2 w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>

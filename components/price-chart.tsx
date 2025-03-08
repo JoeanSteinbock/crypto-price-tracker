@@ -168,7 +168,7 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
 
   // Determine chart colors based on theme
   const getChartColor = () => {
-    if (theme === "dark") {
+    if (theme === "dark" || theme === "system") {
       return "rgba(255, 255, 255, 0.3)" // Reduced opacity for dark mode
     }
     return "rgba(0, 0, 0, 0.2)" // Reduced opacity for light mode
@@ -181,7 +181,7 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   return (
     <div 
       ref={chartRef} 
-      className="absolute inset-0 w-full h-full opacity-50 pointer-events-none z-0" 
+      className="absolute inset-0 z-0 w-full h-full opacity-50 pointer-events-none" 
       aria-hidden="true"
     >
       <ResponsiveContainer width="100%" height="100%">
