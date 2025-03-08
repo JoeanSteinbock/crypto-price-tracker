@@ -47,6 +47,19 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
   }
+
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    /* 在移动端时有足够空间就隐藏滚动条 */
+    @media (max-height: 800px) {
+      overflow-y: hidden;
+    }
+  }
 }
 
 @layer base {
@@ -62,6 +75,18 @@
 @media (min-width: 475px) {
   .xs\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 优化移动端滚动条样式 */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 0px;
+  }
+  
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

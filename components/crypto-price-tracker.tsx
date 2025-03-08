@@ -591,15 +591,15 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
   return (
     <div className="relative min-h-screen">
-      <div className="flex flex-col justify-center items-center p-4 min-h-screen text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white">
-        <div className="relative w-full max-w-3xl">
+      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white">
+        <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
           <div className="absolute inset-0 z-20 pointer-events-none">
             {!isLoading && displayPrice !== null && <PriceChart currentPrice={displayPrice} cryptoId={selectedCrypto.id} />}
           </div>
 
           {/* 头部导航栏 - 使用较低的z-index，但保持可交互 */}
-          <div className="flex relative z-10 justify-between items-center mb-8">
+          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8">
             <h1 className="text-xl font-bold sm:text-2xl">CryptoTick.live</h1>
             <div className="flex gap-2 items-center">
               <AudioController />
@@ -739,7 +739,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
           </div>
 
           {/* 主价格显示区域 - 完全透明，只有文字 */}
-          <div className="relative z-10 p-4 mb-8">
+          <div className="relative z-10 p-4 mb-4 sm:mb-8">
             <div className="flex items-center mb-4">
               {selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
                 <img
@@ -801,7 +801,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Stats grid */}
           {!isLoading && priceData && (
-            <div className="grid relative z-10 grid-cols-1 gap-4 p-4 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-6 dark:bg-gray-800/70 dark:border-gray-600/80">
+            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80">
               <div className="flex flex-col">
                 <span className="mb-1 text-sm text-gray-500 dark:text-gray-400">24h Low/High</span>
                 <div className="text-sm font-medium sm:text-base">
@@ -839,14 +839,14 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Loading state */}
           {isLoading && (
-            <div className="flex relative z-10 justify-center items-center h-64">
+            <div className="flex relative z-10 justify-center items-center h-48 sm:h-64">
               <div className="w-12 h-12 rounded-full border-t-2 border-b-2 border-gray-900 animate-spin dark:border-white"></div>
             </div>
           )}
 
           {/* Last updated and CoinGecko Attribution */}
           {!isLoading && priceData && (
-            <div className="flex relative z-10 justify-between items-center mt-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
               {/* CoinGecko Attribution - 左侧 */}
               <a 
                 href={`https://www.coingecko.com/en/coins/${selectedCrypto.id}`}
