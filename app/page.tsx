@@ -2,6 +2,7 @@
 
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
 import { useEffect } from "react"
+import Image from "next/image"
 
 export default function Home() {
   useEffect(() => {
@@ -17,8 +18,21 @@ export default function Home() {
         );
       });
     }
+
+    // 添加 PWA 安装提示
+    let deferredPrompt: any;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // 可以在这里添加自定义安装提示UI
+    });
   }, []);
 
-  return <CryptoPriceTracker />
+  return (
+    <main className="relative">
+      {/* 移除固定定位的 logo */}
+      <CryptoPriceTracker />
+    </main>
+  )
 }
 

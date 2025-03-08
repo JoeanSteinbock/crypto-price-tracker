@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AudioController } from "@/components/audio-controller"
 import { PriceChart } from "@/components/price-chart"
+import Image from "next/image"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
@@ -598,14 +599,21 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
             {!isLoading && displayPrice !== null && <PriceChart currentPrice={displayPrice} cryptoId={selectedCrypto.id} />}
           </div>
 
-          {/* 头部导航栏 - 使用较低的z-index，但保持可交互 */}
+          {/* 头部导航栏 */}
           <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8">
-            <h1 className="text-xl font-bold sm:text-2xl">CryptoTick.live</h1>
+            <div className="flex gap-2 items-center">
+              <Image
+                src="/logo.svg"
+                alt="CryptoTick.live Logo"
+                width={32}
+                height={32}
+                priority
+              />
+              <h1 className="text-xl font-bold sm:text-2xl">CryptoTick.live</h1>
+            </div>
             <div className="flex gap-2 items-center">
               <AudioController />
               <ThemeToggle />
-
-              {/* Crypto selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

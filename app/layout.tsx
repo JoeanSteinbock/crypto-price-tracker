@@ -28,10 +28,19 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   themeColor: "#000000",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192x192.png", type: "image/png" }
+    ],
+    apple: [
+      { url: "/icons/icon-192x192.png" }
+    ]
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CryptoTick.live",
+    title: "CryptoTick.live"
   },
   viewport: {
     width: "device-width",
