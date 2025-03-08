@@ -11,15 +11,7 @@ import Image from "next/image"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-// Define cryptocurrency types and data structure
-type Crypto = {
-  id: string
-  symbol: string
-  name: string
-  icon: string
-  color: string
-}
+import { TOP_CRYPTOCURRENCIES, DEFAULT_CRYPTOCURRENCIES, CryptoCurrency } from "../data/cryptocurrencies"
 
 type PriceData = {
   current_price: number
@@ -35,14 +27,7 @@ type PriceData = {
 
 
 // Default cryptocurrencies
-const DEFAULT_CRYPTOS: Crypto[] = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", icon: "₿", color: "#f7931a" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", icon: "Ξ", color: "#627eea" },
-  { id: "solana", symbol: "SOL", name: "Solana", icon: "Ⓢ", color: "#00ffbd" },
-  { id: "binancecoin", symbol: "BNB", name: "Binance Coin", icon: "Ƀ", color: "#f3ba2f" },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", icon: "Ð", color: "#c3a634" },
-  { id: "pi-network", symbol: "PI", name: "Pi Network", icon: "π", color: "#6b3fa0" },
-]
+const DEFAULT_CRYPTOS: CryptoCurrency[] = DEFAULT_CRYPTOCURRENCIES;
 
 // 更新所有的本地存储键名
 const STORAGE_KEY = "cryptotick-favorites"
@@ -60,9 +45,9 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
   const lastFetchTimeRef = useRef<number>(0)
 
   // 先初始化状态变量
-  const [selectedCrypto, setSelectedCrypto] = useState<Crypto>(() => {
+  const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency>(() => {
     // 简化的初始化逻辑，只从默认列表中查找
-    const cryptoFromDefault = DEFAULT_CRYPTOS.find((c) => c.id === initialCrypto);
+    const cryptoFromDefault = TOP_CRYPTOCURRENCIES.find((c) => c.id === initialCrypto);
     return cryptoFromDefault || DEFAULT_CRYPTOS[0];
   });
 
@@ -71,10 +56,10 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
   const [previousPrice, setPreviousPrice] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [searchResults, setSearchResults] = useState<Crypto[]>([])
+  const [searchResults, setSearchResults] = useState<CryptoCurrency[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [favoriteCoins, setFavoriteCoins] = useState<Crypto[]>([])
-  const [availableCryptos, setAvailableCryptos] = useState<Crypto[]>(DEFAULT_CRYPTOS)
+  const [favoriteCoins, setFavoriteCoins] = useState<CryptoCurrency[]>([])
+  const [availableCryptos, setAvailableCryptos] = useState<CryptoCurrency[]>(DEFAULT_CRYPTOS)
 
   // 在状态初始化后，添加一个 useEffect 来处理初始加密货币
   useEffect(() => {
@@ -127,7 +112,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
         const parsed = JSON.parse(savedFavorites)
         setFavoriteCoins(parsed)
         setAvailableCryptos([...DEFAULT_CRYPTOS, ...parsed.filter(
-          (coin: Crypto) => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
+          (coin: CryptoCurrency) => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
         )])
       } catch (e) {
         console.error("Failed to parse saved favorites:", e)
@@ -162,7 +147,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
       const data = await response.json()
 
-      // Convert search results to our Crypto type
+      // Convert search results to our CryptoCurrency type
       const formattedResults = data.coins.slice(0, 10).map((coin: any) => ({
         id: coin.id,
         symbol: coin.symbol.toUpperCase(),
@@ -181,7 +166,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
   }
 
   // Add to favorites
-  const addToFavorites = (crypto: Crypto) => {
+  const addToFavorites = (crypto: CryptoCurrency) => {
     if (!favoriteCoins.some(coin => coin.id === crypto.id)) {
       const updatedFavorites = [...favoriteCoins, crypto]
       setFavoriteCoins(updatedFavorites)
@@ -300,7 +285,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
       if (previousPrice !== null) {
         const priceChange = Math.abs(newPriceData.current_price - previousPrice)
         const changePercentage = (priceChange / previousPrice) * 100
-        
+
         // 只有当价格变化超过 0.1% 时才触发声音
         if (changePercentage > 0.1) {
           const event = new CustomEvent("price-change", {
@@ -423,7 +408,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
   }, [priceData, isLoading, createMicroFluctuation])
 
   // Handle crypto selection change
-  const handleCryptoChange = (crypto: Crypto) => {
+  const handleCryptoChange = (crypto: CryptoCurrency) => {
     // 只有当选择了不同的加密货币时才更新
     if (crypto.id !== selectedCrypto.id) {
       logDebug(`User selected new crypto: ${crypto.id} (${crypto.name})`);
@@ -467,7 +452,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
       logDebug(`Successfully fetched data for ${cryptoId}:`, data.id);
 
       // 创建新的加密货币对象
-      const newCrypto: Crypto = {
+      const newCrypto: CryptoCurrency = {
         id: data.id,
         symbol: data.symbol.toUpperCase(),
         name: data.name,
@@ -662,7 +647,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                             {crypto.icon && (
                               <img src={crypto.icon} alt={crypto.name} className="mr-2 w-5 h-5" />
                             )}
-                            <span>{crypto.name} ({crypto.symbol})</span>
+                            <span>{crypto.name} ({crypto.symbol.toUpperCase()})</span>
                           </div>
                           <Button
                             variant="ghost"
@@ -689,12 +674,12 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                         key={crypto.id}
                         onClick={() => handleCryptoChange(crypto)}
                         className="flex relative flex-col items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 group"
-                        title={`${crypto.name} (${crypto.symbol})`}
+                        title={`${crypto.name} (${crypto.symbol.toUpperCase()})`}
                       >
                         <span className="text-xl" style={{ color: crypto.color }}>
                           {crypto.icon}
                         </span>
-                        <span className="mt-1 text-xs">{crypto.symbol}</span>
+                        <span className="mt-1 text-xs">{crypto.symbol.toUpperCase()}</span>
 
                         {/* 悬停时显示的完整名称 */}
                         <div className="absolute bottom-full left-1/2 px-2 py-1 mb-1 text-xs text-white whitespace-nowrap bg-gray-800 rounded opacity-0 transition-opacity transform -translate-x-1/2 pointer-events-none group-hover:opacity-100">
@@ -856,15 +841,15 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
           {!isLoading && priceData && (
             <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
               {/* CoinGecko Attribution - 左侧 */}
-              <a 
+              <a
                 href={`https://www.coingecko.com/en/coins/${selectedCrypto.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex gap-1 items-center opacity-70 transition-opacity hover:opacity-100"
               >Powered by
-                <img 
-                  src="https://static.coingecko.com/s/coingecko-logo-8903d34ce19ca4be1c81f0db30e924154750d208683fad7ae6f2ce06c76d0a56.png" 
-                  alt="CoinGecko Logo" 
+                <img
+                  src="https://static.coingecko.com/s/coingecko-logo-8903d34ce19ca4be1c81f0db30e924154750d208683fad7ae6f2ce06c76d0a56.png"
+                  alt="CoinGecko Logo"
                   className="h-5 dark:invert"
                 />
               </a>

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { CryptoCurrency, DEFAULT_CRYPTOCURRENCIES } from "./data/cryptocurrencies"
 
 // Define cryptocurrency types and data structure
 type Crypto = {
@@ -26,15 +27,9 @@ type PriceData = {
   last_updated: string
 }
 
-// Available cryptocurrencies
-const CRYPTOS: Crypto[] = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", icon: "₿", color: "#f7931a" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", icon: "Ξ", color: "#627eea" },
-  { id: "solana", symbol: "SOL", name: "Solana", icon: "Ⓢ", color: "#00ffbd" },
-]
 
 export default function CryptoPriceTracker() {
-  const [selectedCrypto, setSelectedCrypto] = useState<Crypto>(CRYPTOS[0])
+  const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency>(DEFAULT_CRYPTOCURRENCIES[0])
   const [priceData, setPriceData] = useState<PriceData | null>(null)
   const [displayPrice, setDisplayPrice] = useState<number | null>(null)
   const [previousPrice, setPreviousPrice] = useState<number | null>(null)
@@ -164,7 +159,7 @@ export default function CryptoPriceTracker() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-gray-900 border-gray-700">
-              {CRYPTOS.map((crypto) => (
+              {DEFAULT_CRYPTOCURRENCIES.map((crypto) => (
                 <DropdownMenuItem
                   key={crypto.id}
                   onClick={() => setSelectedCrypto(crypto)}

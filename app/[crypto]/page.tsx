@@ -1,15 +1,6 @@
 import type { Metadata } from "next"
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
-
-// 定义默认加密货币，用于静态生成和元数据
-const DEFAULT_CRYPTOS = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum" },
-  { id: "solana", symbol: "SOL", name: "Solana" },
-  { id: "binancecoin", symbol: "BNB", name: "Binance Coin" },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin" },
-  { id: "pi-network", symbol: "PI", name: "Pi Network" },
-]
+import TOP_CRYPTOCURRENCIES from "../../data/cryptocurrencies"
 
 // 动态生成元数据
 export async function generateMetadata({ params }: { params: { crypto: string } }): Promise<Metadata> {
@@ -38,7 +29,7 @@ export async function generateMetadata({ params }: { params: { crypto: string } 
     }
   } catch (error) {
     // 如果 API 调用失败，使用默认加密货币或通用元数据
-    const defaultCrypto = DEFAULT_CRYPTOS.find((c) => c.id === cryptoId) || DEFAULT_CRYPTOS[0]
+    const defaultCrypto = TOP_CRYPTOCURRENCIES.find((c) => c.id === cryptoId) || TOP_CRYPTOCURRENCIES[0]
     
     return {
       title: `${defaultCrypto.name} (${defaultCrypto.symbol}) Price | Live Cryptocurrency Tracker`,
@@ -58,7 +49,7 @@ export default async function CryptoPage({ params }: { params: { crypto: string 
 
 // 为常见加密货币生成静态路径，以提高性能
 export function generateStaticParams() {
-  return DEFAULT_CRYPTOS.map((crypto) => ({
+  return TOP_CRYPTOCURRENCIES.map((crypto) => ({
     crypto: crypto.id,
   }))
 }
