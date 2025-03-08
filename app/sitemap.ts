@@ -1,20 +1,14 @@
 import type { MetadataRoute } from "next"
-
-// Available cryptocurrencies
-const CRYPTOS = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum" },
-  { id: "solana", symbol: "SOL", name: "Solana" },
-]
+import { TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://your-domain.com"
+  const baseUrl = "https://cryptotick.live"
 
-  // Create sitemap entries for each cryptocurrency
-  const cryptoEntries = CRYPTOS.map((crypto) => ({
+  // 创建每个加密货币的站点地图条目
+  const cryptoEntries = TOP_CRYPTOCURRENCIES.map((crypto) => ({
     url: `${baseUrl}/${crypto.id}`,
     lastModified: new Date(),
-    changeFrequency: "hourly",
+    changeFrequency: "hourly" as const,
     priority: 0.8,
   }))
 
@@ -22,7 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: "hourly",
+      changeFrequency: "hourly" as const,
       priority: 1,
     },
     ...cryptoEntries,
