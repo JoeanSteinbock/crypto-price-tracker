@@ -805,7 +805,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
   return (
     <div className="relative min-h-screen">
-      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white md:landscape:pt-4 mobileLandscape:pt-0">
+      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0">
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
           <div className="absolute inset-0 z-20 pointer-events-none">
@@ -1055,9 +1055,9 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Stats grid */}
           {!isLoading && priceData && (
-            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80 mobileLandscape:fixed mobileLandscape:bottom-6 mobileLandscape:left-1/2 mobileLandscape:-translate-x-1/2 mobileLandscape:grid-cols-4 mobileLandscape:w-auto mobileLandscape:min-w-[600px] mobileLandscape:max-w-[90vw] mobileLandscape:p-4 mobileLandscape:gap-8 mobileLandscape:bg-white/90 mobileLandscape:dark:bg-black/90">
+            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 max-sm:grid-cols-4 sm:p-4 sm:gap-6 dark:bg-gray-800/70 dark:border-gray-600/80 mobileLandscape:fixed mobileLandscape:bottom-6 mobileLandscape:left-1/2 mobileLandscape:-translate-x-1/2 mobileLandscape:grid-cols-4 mobileLandscape:w-auto mobileLandscape:min-w-[600px] mobileLandscape:max-w-[90vw] mobileLandscape:p-4 mobileLandscape:gap-8 mobileLandscape:bg-white/90 mobileLandscape:dark:bg-black/90">
               <div className="flex flex-col">
-                <span className="mb-1 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 mobileLandscape:text-xs">24h Low/High</span>
+                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 mobileLandscape:text-xs">24h Low/High</span>
                 <div className="text-sm font-medium whitespace-nowrap sm:text-base mobileLandscape:text-base">
                   ${priceData.low_24h.toLocaleString()} / ${priceData.high_24h.toLocaleString()}
                 </div>
