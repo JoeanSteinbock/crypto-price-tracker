@@ -24,6 +24,24 @@ export function AudioController() {
   const bgAudioRef = useRef<HTMLAudioElement>(null)
   const priceAudioRef = useRef<HTMLAudioElement>(null)
   const lastSoundTimeRef = useRef<number>(0)
+  const audioContextRef = useRef<AudioContext | null>(null)
+
+  useEffect(() => {
+    return () => {
+      // 组件卸载时清理音频上下文
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
+  }, [])
+
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    return audioContextRef.current
+  }
 
   // 随机选择背景音乐
   const getRandomTrack = useCallback(() => {
@@ -107,8 +125,6 @@ export function AudioController() {
 
   // 修改价格变化事件处理
   useEffect(() => {
-    let audioContext: AudioContext | null = null
-
     const handlePriceChange = (event: CustomEvent) => {
       if (!isPlaying) return
 
@@ -139,9 +155,7 @@ export function AudioController() {
       }
 
       // 创建更积极的价格变化声音
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-      }
+      const audioContext = getAudioContext()
 
       // 创建更悦耳的声音
       const createChord = () => {
@@ -150,21 +164,21 @@ export function AudioController() {
           : [493.88, 587.33, 698.46]; // B4, D5, F5 (B diminished chord)
         
         frequencies.forEach(freq => {
-          const osc = audioContext!.createOscillator();
-          const gain = audioContext!.createGain();
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
           
           osc.type = "sine";
           osc.frequency.value = freq;
           
-          gain.gain.setValueAtTime(0, audioContext!.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, audioContext!.currentTime + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioContext!.currentTime + 0.5);
+          gain.gain.setValueAtTime(0, audioContext.currentTime);
+          gain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
           
           osc.connect(gain);
-          gain.connect(audioContext!.destination);
+          gain.connect(audioContext.destination);
           
           osc.start();
-          osc.stop(audioContext!.currentTime + 0.5);
+          osc.stop(audioContext.currentTime + 0.5);
         });
       };
 
@@ -175,9 +189,6 @@ export function AudioController() {
 
     return () => {
       window.removeEventListener("price-change", handlePriceChange as EventListener)
-      if (audioContext) {
-        audioContext.close()
-      }
       // 确保清理时停止次要音频
       if (backgroundAudio) {
         backgroundAudio.pause();
@@ -195,7 +206,7 @@ export function AudioController() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex gap-2 items-center">
       <Button
         variant="ghost"
         size="icon"
@@ -212,4 +223,3 @@ export function AudioController() {
     </div>
   )
 }
-

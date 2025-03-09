@@ -90,3 +90,33 @@
   }
 }
 
+/* 演示模式样式 */
+body.presentation-mode {
+  /* 隐藏控制元素 */
+  & .controls-container {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  /* 放大价格显示 */
+  & .price-display {
+    font-size: 8rem;
+  }
+  
+  /* 增加图表可见度 */
+  & .chart-container {
+    opacity: 0.8;
+  }
+}
+
+/* 优化大屏幕显示 */
+@media screen and (min-width: 1920px) {
+  .price-display {
+    font-size: 6rem;
+  }
+  
+  .chart-container {
+    height: 60vh;
+  }
+}
+

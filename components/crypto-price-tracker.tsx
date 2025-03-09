@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { ArrowDown, ArrowUp, ChevronDown, Search } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { AudioController } from "@/components/audio-controller"
+import { ToolbarMenu } from "@/components/toolbar-menu"
 import { PriceChart } from "@/components/price-chart"
 import Image from "next/image"
 
@@ -607,8 +606,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                 </AnimatedGradientText></h1>
             </div>
             <div className="flex gap-2 items-center">
-              <AudioController />
-              <ThemeToggle />
+              <ToolbarMenu />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

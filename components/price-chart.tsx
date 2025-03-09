@@ -168,10 +168,9 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
 
   // Determine chart colors based on theme
   const getChartColor = () => {
-    if (theme === "dark" || theme === "system") {
-      return "rgba(255, 255, 255, 0.3)" // Reduced opacity for dark mode
-    }
-    return "rgba(0, 0, 0, 0.2)" // Reduced opacity for light mode
+    return window.matchMedia('(prefers-color-scheme: dark)').matches || theme === "dark"
+      ? "rgba(255, 255, 255, 0.3)" // Dark mode
+      : "rgba(0, 0, 0, 0.2)" // Light mode
   }
 
   if (isLoading || priceHistory.length === 0) {

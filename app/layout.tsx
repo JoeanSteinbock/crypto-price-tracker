@@ -9,9 +9,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
   description:
-    "Track cryptocurrency prices in real-time with CryptoTick.live - featuring live charts, price alerts, and market data.",
+    "Track cryptocurrency prices in real-time with CryptoTick.live - Perfect for live streaming, broadcasting, and display on large screens. Features live charts, price alerts, and market data.",
   keywords:
-    "cryptocurrency, bitcoin price, ethereum price, solana price, crypto tracker, live crypto prices, BTC, ETH, SOL, market cap, trading volume",
+    "cryptocurrency, bitcoin price, ethereum price, crypto tracker, live crypto prices, crypto broadcast, crypto streaming, digital signage, crypto display, large screen crypto, crypto TV display, crypto dashboard, BTC, ETH, SOL, market cap, trading volume, crypto presentation",
   generator: "CryptoTick.live",
   authors: [{ name: "CryptoTick.live" }],
   openGraph: {
@@ -47,6 +47,15 @@ export const metadata: Metadata = {
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "mobile-web-app-capable": "yes",
+    "application-name": "CryptoTick.live",
+    "msapplication-TileColor": "#000000",
+    "theme-color": "#000000",
+    "display": "fullscreen",
+    "orientation": "landscape"
   },
 }
 

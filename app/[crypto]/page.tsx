@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { params: { crypto: string } 
       openGraph: {
         images: data.image?.large ? [data.image.large] : [],
       },
+      manifest: `/manifest/${cryptoId}.json`,
     }
   } catch (error) {
     // 如果 API 调用失败，使用默认加密货币或通用元数据
