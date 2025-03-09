@@ -1055,7 +1055,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Stats grid */}
           {!isLoading && priceData && (
-            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 max-sm:grid-cols-4 sm:p-4 sm:gap-6 dark:bg-gray-800/70 dark:border-gray-600/80 mobileLandscape:fixed mobileLandscape:bottom-6 mobileLandscape:left-1/2 mobileLandscape:-translate-x-1/2 mobileLandscape:grid-cols-4 mobileLandscape:w-auto mobileLandscape:min-w-[600px] mobileLandscape:max-w-[90vw] mobileLandscape:p-4 mobileLandscape:gap-8 mobileLandscape:bg-white/90 mobileLandscape:dark:bg-black/90">
+            <div className="grid relative z-10 md:grid-cols-4 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 grid-cols-1 sm:p-4 sm:gap-6 dark:bg-gray-800/70 dark:border-gray-600/80 mobileLandscape:fixed mobileLandscape:bottom-6 mobileLandscape:left-1/2 mobileLandscape:-translate-x-1/2 mobileLandscape:grid-cols-4 mobileLandscape:w-auto mobileLandscape:min-w-[600px] mobileLandscape:max-w-[90vw] mobileLandscape:p-4 mobileLandscape:gap-8 mobileLandscape:bg-white/90 mobileLandscape:dark:bg-black/90">
               <div className="flex flex-col">
                 <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 mobileLandscape:text-xs">24h Low/High</span>
                 <div className="text-sm font-medium whitespace-nowrap sm:text-base mobileLandscape:text-base">
