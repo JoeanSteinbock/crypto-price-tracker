@@ -76,7 +76,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem scriptProps={{ 'data-cfasync': 'false' }}>
           {children}
         </ThemeProvider>
       </body>
