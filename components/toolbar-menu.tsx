@@ -19,30 +19,30 @@ export function ToolbarMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
-          <Settings className="h-4 w-4" />
+          <Settings className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>工具栏</DropdownMenuLabel>
+        <DropdownMenuLabel>Toolbar</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         <div className="p-2 space-y-4">
           <div>
-            <span className="text-xs text-muted-foreground">音频控制</span>
-            <AudioController className="mt-1 flex justify-start" />
+            <span className="text-xs text-muted-foreground">Audio Control</span>
+            <AudioController className="flex justify-start mt-1" />
           </div>
           
           <div>
-            <span className="text-xs text-muted-foreground">显示控制</span>
-            <div className="mt-1 flex flex-col gap-2">
+            <span className="text-xs text-muted-foreground">Display Control</span>
+            <div className="flex flex-col gap-2 mt-1">
               <Button
                 variant="outline"
                 size="sm"
                 className="justify-start"
                 onClick={() => document.documentElement.requestFullscreen()}
               >
-                <Maximize2 className="mr-2 h-4 w-4" />
-                全屏模式
+                <Maximize2 className="mr-2 w-4 h-4" />
+                Fullscreen Mode
               </Button>
               <Button
                 variant="outline"
@@ -50,8 +50,8 @@ export function ToolbarMenu() {
                 className="justify-start"
                 onClick={() => document.body.classList.toggle('presentation-mode')}
               >
-                <Monitor className="mr-2 h-4 w-4" />
-                演示模式
+                <Monitor className="mr-2 w-4 h-4" />
+                Presentation Mode
               </Button>
               <Button
                 variant="outline"
@@ -64,20 +64,20 @@ export function ToolbarMenu() {
                       audio: false
                     });
                   } catch (err) {
-                    console.error('屏幕共享失败:', err);
+                    console.error('Screen share failed:', err);
                   }
                 }}
               >
-                <Cast className="mr-2 h-4 w-4" />
-                屏幕共享
+                <Cast className="mr-2 w-4 h-4" />
+                Screen Share
               </Button>
             </div>
           </div>
           
           <div>
-            <span className="text-xs text-muted-foreground">主题设置</span>
+            <span className="text-xs text-muted-foreground">Theme Settings</span>
             <div className="mt-1">
-              <ThemeToggle className="w-full justify-start" />
+              <ThemeToggle />
             </div>
           </div>
         </div>

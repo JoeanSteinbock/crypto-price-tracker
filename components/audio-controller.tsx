@@ -13,7 +13,11 @@ const bgTracks = [
   "https://cdn.pixabay.com/audio/2022/03/29/audio_321d17982c.mp3"
 ]
 
-export function AudioController() {
+interface AudioControllerProps {
+  className?: string
+}
+
+export function AudioController({ className }: AudioControllerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const [backgroundAudio, setBackgroundAudio] = useState<HTMLAudioElement | null>(null)
@@ -214,17 +218,18 @@ export function AudioController() {
     setIsPlaying(!isPlaying)
   }
 
+  const extraClass = autoplayFailed ? "animate-pulse" : ""
   return (
-    <div>
+    <div className={className}>
       <Button
         variant="outline"
         size="sm"
-        className={`${autoplayFailed ? "animate-pulse" : ""} w-full flex items-center gap-2`}
+        className={`flex gap-2 items-center w-full ${extraClass}`}
         onClick={toggleAudio}
         title={isPlaying ? "Mute" : "Unmute"}
       >
-        {isPlaying ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-        <span>音频{isPlaying ? '开启' : '关闭'}</span>
+        {isPlaying ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        <span>Audio {isPlaying ? 'On' : 'Off'}</span>
       </Button>
     </div>
   )
