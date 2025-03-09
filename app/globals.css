@@ -93,6 +93,7 @@
 /* 演示模式样式 */
 body.presentation-mode {
   cursor: pointer; /* 指示可点击退出 */
+  overflow: hidden; /* 防止滚动 */
   
   /* 隐藏控制元素 */
   & .controls-container {
@@ -100,11 +101,91 @@ body.presentation-mode {
     pointer-events: none;
     transition: opacity 0.3s ease-in-out;
   }
+
+  /* 添加退出提示 */
+  &::after {
+    content: "Click anywhere to exit";
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: fadeInOut 3s ease-in-out 1s forwards;
+    z-index: 40;
+  }
+
+  &.dark::after {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    10%, 90% { opacity: 0.8; }
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0.3;
+    }
+  }
+
+  /* 显示Logo */
+  & .presentation-logo {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    animation: pulse 4s ease-in-out infinite;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 30;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.2));
+  }
+
+  &.dark .presentation-logo {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+  }
+
+  & .presentation-logo:hover {
+    animation: none;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    transform: scale(1.05);
+  }
+
+  & .presentation-logo img {
+    width: 24px;
+    height: 24px;
+  }
+
+  & .presentation-logo h1 {
+    font-size: 1rem;
+    margin: 0;
+  }
   
   /* 放大价格显示 */
   & .price-display {
-    font-size: 10rem !important;
-    transition: font-size 0.3s ease-in-out;
+    font-size: 8rem !important;
+    line-height: 1 !important;
+    margin-top: 2rem;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  &.dark .price-display {
+    text-shadow: 0 0 15px rgba(0, 255, 120, 0.15);
   }
 
   /* 主容器样式 */
@@ -112,7 +193,7 @@ body.presentation-mode {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    padding-top: 10vh;
+    padding-top: 6vh;
   }
 
   /* 价格区域容器 */
@@ -123,28 +204,40 @@ body.presentation-mode {
     width: 100%;
   }
   
-  /* 增加图表可见度 */
+  /* 调整图表容器 */
   & .chart-container {
-    opacity: 0.8;
-    transition: opacity 0.3s ease-in-out;
+    height: 100% !important;
+    opacity: 0.7;
   }
 
-  /* 调整统计面板样式 */
+  &.dark .chart-container {
+    opacity: 0.8;
+    filter: brightness(1.2) contrast(1.1);
+  }
+
+  /* 调整统计网格 */
   & .stats-grid {
     position: fixed;
     bottom: 2rem;
-    /* left: 48%;
-    transform: translateX(-52%); */
-    background: rgba(225, 225, 225, 0.1);
-    opacity: 0.8;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(128, 128, 128, 0.1);
-    transition: all 0.3s ease-in-out;
-    /* padding: 1rem; */
-    z-index: 100;
+    left: 50%;
+    transform: translateX(-50%);
     width: auto;
-    max-width: 90vw;
+    max-width: 90%;
     margin: 0 auto;
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    z-index: 25;
+    font-size: 1.2rem;
+    opacity: 0.8;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  &.dark .stats-grid {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    color: #000;
   }
 
   /* 隐藏其他UI元素 */
@@ -152,12 +245,6 @@ body.presentation-mode {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease-in-out;
-  }
-
-  /* 深色模式适配 */
-  &.dark .stats-grid {
-    background: rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -170,5 +257,10 @@ body.presentation-mode {
   .chart-container {
     height: 60vh;
   }
+}
+
+/* 默认隐藏演示模式logo */
+.presentation-logo {
+  display: none;
 }
 

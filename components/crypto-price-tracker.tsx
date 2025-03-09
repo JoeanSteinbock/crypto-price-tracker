@@ -586,7 +586,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* 头部导航栏 */}
           <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container">
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center logo-container">
               <Image
                 src="/logo.svg"
                 alt="CryptoTick.live Logo"
@@ -603,7 +603,8 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                 >
                   <span className="animate-[blink_1s_infinite] text-md">.</span>
                   live
-                </AnimatedGradientText></h1>
+                </AnimatedGradientText>
+              </h1>
             </div>
             <div className="flex gap-2 items-center">
               <ToolbarMenu />
@@ -741,30 +742,54 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* 主价格显示区域 - 完全透明，只有文字 */}
           <div className="relative z-10 p-4 mb-4 sm:mb-8">
-            <div className="flex items-center mb-4">
-              {selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
-                <img
-                  src={selectedCrypto.icon}
-                  alt={selectedCrypto.name}
-                  className="mr-4 w-16 h-16 rounded-full"
-                  onError={(e) => {
-                    // Fallback to emoji if image fails to load
-                    e.currentTarget.style.display = 'none';
-                    // Show fallback element
-                    const fallback = document.getElementById(`crypto-icon-fallback-${selectedCrypto.id}`);
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : (
-                <div
-                  id={`crypto-icon-fallback-${selectedCrypto.id}`}
-                  className="flex justify-center items-center mr-4 w-16 h-16 text-3xl bg-orange-400 rounded-full"
-                >
-                  {getCryptoEmoji(selectedCrypto.id)}
-                </div>
-              )}
+            <div className="flex items-center mb-4 justify-between">
+              <div className="flex items-center">
+                {selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
+                  <img
+                    src={selectedCrypto.icon}
+                    alt={selectedCrypto.name}
+                    className="mr-4 w-16 h-16 rounded-full"
+                    onError={(e) => {
+                      // Fallback to emoji if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      // Show fallback element
+                      const fallback = document.getElementById(`crypto-icon-fallback-${selectedCrypto.id}`);
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : (
+                  <div
+                    id={`crypto-icon-fallback-${selectedCrypto.id}`}
+                    className="flex justify-center items-center mr-4 w-16 h-16 text-3xl bg-orange-400 rounded-full"
+                  >
+                    {getCryptoEmoji(selectedCrypto.id)}
+                  </div>
+                )}
 
-              <h1 className="text-3xl font-bold">{selectedCrypto.name}</h1>
+                <h1 className="text-3xl font-bold">{selectedCrypto.name}</h1>
+              </div>
+
+              <div className="presentation-logo">
+                <Image
+                  src="/logo.svg"
+                  alt="CryptoTick.live Logo"
+                  width={24}
+                  height={24}
+                  priority
+                />
+                <h1 className="text-xl font-bold">
+                  CryptoTick
+                  <AnimatedGradientText
+                    className="text-sm font-bold"
+                    colorFrom="#00ff87"
+                    colorTo="#60a5fa"
+                    speed={6}
+                  >
+                    <span className="animate-[blink_1s_infinite] text-md">.</span>
+                    live
+                  </AnimatedGradientText>
+                </h1>
+              </div>
             </div>
 
             <div className="flex items-baseline">
