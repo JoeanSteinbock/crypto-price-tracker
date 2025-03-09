@@ -421,6 +421,9 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
       // 更新 URL 以反映所选加密货币
       logDebug(`Pushing new URL: /${crypto.id}`);
       router.push(`/${crypto.id}`, { scroll: false })
+      
+      // 触发加密货币变化事件，用于同步音频状态
+      window.dispatchEvent(new Event('crypto-changed'));
     } else {
       logDebug(`User selected same crypto: ${crypto.id}, no change needed`);
     }

@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Volume2, VolumeX } from "lucide-react"
+import { Music, Music2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AudioGenerator } from "@/components/audio-generator"
+// 我们将不再直接导入AudioGenerator，而是在需要时动态加载它
+// import { AudioGenerator } from "@/components/audio-generator"
 
 const bgTracks = [
   "https://cdn.pixabay.com/audio/2024/12/26/audio_5686c7b0c3.mp3",
@@ -13,224 +14,324 @@ const bgTracks = [
   "https://cdn.pixabay.com/audio/2022/03/29/audio_321d17982c.mp3"
 ]
 
+// 全局音频管理器
+class AudioManager {
+  private static instance: AudioManager;
+  private audio: HTMLAudioElement | null = null;
+  private secondaryAudio: HTMLAudioElement | null = null;
+  private audioContext: AudioContext | null = null;
+  private isPlaying: boolean = false;
+  private listeners: Set<(isPlaying: boolean) => void> = new Set();
+  private lastSoundTime: number = 0;
+  private useAdvancedAudio: boolean = false; // 是否使用高级音频功能
+
+  private constructor() {
+    // 私有构造函数，防止直接创建实例
+    if (typeof window !== 'undefined') {
+      // 主背景音乐
+      this.audio = new Audio();
+      this.audio.loop = true;
+      this.audio.volume = 0.3;
+      this.setRandomTrack();
+      
+      // 次要音频（用于价格变化等事件）
+      this.secondaryAudio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=electronic-future-beats-117997.mp3");
+      this.secondaryAudio.volume = 0.2;
+      
+      // 设置音频上下文（用于生成音调）
+      try {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        console.error("无法创建音频上下文:", e);
+        this.dispatchAudioError();
+      }
+      
+      // 添加错误处理
+      if (this.audio) {
+        this.audio.addEventListener('error', this.dispatchAudioError.bind(this));
+      }
+      
+      if (this.secondaryAudio) {
+        this.secondaryAudio.addEventListener('error', this.dispatchAudioError.bind(this));
+      }
+      
+      // 监听加密货币变化事件
+      window.addEventListener('crypto-changed', this.handleCryptoChange.bind(this));
+      
+      // 监听价格变化事件
+      window.addEventListener('price-change', this.handlePriceChange.bind(this) as EventListener);
+      
+      // 检查是否应该使用高级音频功能
+      this.checkAdvancedAudioSupport();
+    }
+  }
+
+  public static getInstance(): AudioManager {
+    if (!AudioManager.instance) {
+      AudioManager.instance = new AudioManager();
+    }
+    return AudioManager.instance;
+  }
+
+  public setRandomTrack(): void {
+    if (!this.audio) return;
+    const randomTrack = bgTracks[Math.floor(Math.random() * bgTracks.length)];
+    this.audio.src = randomTrack;
+    
+    // 添加结束事件监听器，播放下一首
+    this.audio.onended = () => {
+      this.setRandomTrack();
+      if (this.isPlaying) {
+        this.audio?.play().catch(err => console.error("Failed to play next track:", err));
+      }
+    };
+  }
+
+  public toggle(): void {
+    if (!this.audio) return;
+    
+    if (this.isPlaying) {
+      this.audio.pause();
+      if (this.secondaryAudio) {
+        this.secondaryAudio.pause();
+      }
+      this.isPlaying = false;
+    } else {
+      this.audio.play().catch(err => {
+        console.error("Failed to play audio:", err);
+        this.isPlaying = false;
+        this.dispatchAudioError();
+      });
+      this.isPlaying = true;
+    }
+    
+    // 通知所有监听器
+    this.notifyListeners();
+  }
+
+  public getStatus(): boolean {
+    return this.isPlaying;
+  }
+
+  public addListener(callback: (isPlaying: boolean) => void): () => void {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      listener(this.isPlaying);
+    }
+  }
+  
+  private handleCryptoChange(): void {
+    // 确保音频状态一致
+    if (this.audio) {
+      if (this.isPlaying) {
+        if (this.audio.paused) {
+          this.audio.play().catch(err => console.error("Failed to play after crypto change:", err));
+        }
+      } else {
+        if (!this.audio.paused) {
+          this.audio.pause();
+        }
+      }
+    }
+  }
+  
+  private handlePriceChange(event: CustomEvent): void {
+    if (!this.isPlaying) return;
+    
+    const { direction, isNewData } = event.detail;
+    
+    // 限制声音频率（至少间隔5秒）
+    const now = Date.now();
+    if (now - this.lastSoundTime < 5000) {
+      return;
+    }
+    this.lastSoundTime = now;
+    
+    // 播放次要音频（仅在有新数据时）
+    if (isNewData && this.secondaryAudio && this.isPlaying) {
+      this.secondaryAudio.currentTime = 0;
+      this.secondaryAudio.play()
+        .then(() => {
+          setTimeout(() => {
+            if (!this.isPlaying) {
+              this.secondaryAudio?.pause();
+            } else {
+              this.secondaryAudio?.pause();
+              this.secondaryAudio!.currentTime = 0;
+            }
+          }, 3000);
+        })
+        .catch(console.error);
+    }
+    
+    // 创建价格变化音调
+    this.createPriceChangeSound(direction);
+  }
+  
+  private createPriceChangeSound(direction: string): void {
+    if (!this.audioContext) return;
+    
+    const frequencies = direction === "up" 
+      ? [523.25, 659.25, 783.99] // C5, E5, G5 (C major chord)
+      : [493.88, 587.33, 698.46]; // B4, D5, F5 (B diminished chord)
+    
+    frequencies.forEach(freq => {
+      const osc = this.audioContext!.createOscillator();
+      const gain = this.audioContext!.createGain();
+      
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      
+      gain.gain.setValueAtTime(0, this.audioContext!.currentTime);
+      gain.gain.linearRampToValueAtTime(0.1, this.audioContext!.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext!.currentTime + 0.5);
+      
+      osc.connect(gain);
+      gain.connect(this.audioContext!.destination);
+      
+      osc.start();
+      osc.stop(this.audioContext!.currentTime + 0.5);
+    });
+  }
+  
+  private dispatchAudioError(): void {
+    window.dispatchEvent(new Event('audio-error'));
+  }
+  
+  public cleanup(): void {
+    // 清理资源
+    window.removeEventListener('crypto-changed', this.handleCryptoChange.bind(this));
+    window.removeEventListener('price-change', this.handlePriceChange.bind(this) as EventListener);
+    
+    if (this.audio) {
+      this.audio.removeEventListener('error', this.dispatchAudioError.bind(this));
+      this.audio.pause();
+      this.audio.src = '';
+    }
+    
+    if (this.secondaryAudio) {
+      this.secondaryAudio.removeEventListener('error', this.dispatchAudioError.bind(this));
+      this.secondaryAudio.pause();
+      this.secondaryAudio.src = '';
+    }
+    
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+    
+    this.listeners.clear();
+  }
+
+  // 检查是否支持高级音频功能
+  private checkAdvancedAudioSupport(): void {
+    // 这里可以添加检测逻辑，例如检查AudioContext的支持情况
+    // 或者根据用户设备性能决定是否启用高级音频
+    // 目前简单地设置为false，表示默认不使用高级音频
+    this.useAdvancedAudio = false;
+  }
+  
+  // 切换高级音频功能
+  public toggleAdvancedAudio(): void {
+    this.useAdvancedAudio = !this.useAdvancedAudio;
+    // 如果切换到高级音频，可能需要加载AudioGenerator组件
+    if (this.useAdvancedAudio) {
+      // 这里可以添加加载AudioGenerator的逻辑
+      console.log("高级音频功能已启用");
+    } else {
+      console.log("高级音频功能已禁用");
+    }
+  }
+  
+  // 获取高级音频状态
+  public getAdvancedAudioStatus(): boolean {
+    return this.useAdvancedAudio;
+  }
+}
+
 interface AudioControllerProps {
   className?: string
 }
 
 export function AudioController({ className }: AudioControllerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [backgroundAudio, setBackgroundAudio] = useState<HTMLAudioElement | null>(null)
-  const [autoplayAttempted, setAutoplayAttempted] = useState(false)
-  const [autoplayFailed, setAutoplayFailed] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
-  const [volume, setVolume] = useState(0.5)
-  const bgAudioRef = useRef<HTMLAudioElement>(null)
-  const priceAudioRef = useRef<HTMLAudioElement>(null)
-  const lastSoundTimeRef = useRef<number>(0)
-  const audioContextRef = useRef<AudioContext | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [autoplayFailed, setAutoplayFailed] = useState(false);
+  const [advancedAudio, setAdvancedAudio] = useState(false);
+  const audioManager = useRef<AudioManager | null>(null);
 
   useEffect(() => {
-    return () => {
-      // 组件卸载时清理音频上下文
-      if (audioContextRef.current) {
-        audioContextRef.current.close()
-        audioContextRef.current = null
-      }
-    }
-  }, [])
-
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-    }
-    return audioContextRef.current
-  }, [])
-
-  // 随机选择背景音乐
-  const getRandomTrack = useCallback(() => {
-    const randomIndex = Math.floor(Math.random() * bgTracks.length)
-    return bgTracks[randomIndex]
-  }, [])
-
-  useEffect(() => {
-    if (bgAudioRef.current) {
-      bgAudioRef.current.src = getRandomTrack()
-      bgAudioRef.current.loop = true
-      bgAudioRef.current.volume = volume
-    }
-  }, [getRandomTrack, volume])
-
-  // 当一首歌播放结束时,随机播放下一首
-  const handleTrackEnded = useCallback(() => {
-    if (bgAudioRef.current) {
-      bgAudioRef.current.src = getRandomTrack()
-      bgAudioRef.current.play()
-    }
-  }, [getRandomTrack])
-
-  useEffect(() => {
-    const bgAudio = bgAudioRef.current
-    if (bgAudio) {
-      bgAudio.addEventListener('ended', handleTrackEnded)
-    }
-    return () => {
-      if (bgAudio) {
-        bgAudio.removeEventListener('ended', handleTrackEnded)
-      }
-    }
-  }, [handleTrackEnded])
-
-  // 修改初始化代码，移除次要音频的循环播放
-  useEffect(() => {
+    // 初始化音频管理器
     if (typeof window !== 'undefined') {
-      const mainAudio = new Audio(getRandomTrack());
-      const secondaryAudio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=electronic-future-beats-117997.mp3");
+      audioManager.current = AudioManager.getInstance();
       
-      mainAudio.loop = true;
-      mainAudio.volume = 0.3;
-      secondaryAudio.volume = 0.2; // 移除 loop
+      // 同步初始状态
+      setIsPlaying(audioManager.current.getStatus());
+      setAdvancedAudio(audioManager.current.getAdvancedAudioStatus());
       
-      bgAudioRef.current = mainAudio;
-      setBackgroundAudio(secondaryAudio);
-
-      // 监听错误事件
-      const handleError = () => {
-        console.error("背景音乐加载失败");
+      // 添加状态变化监听器
+      const removeListener = audioManager.current.addListener((playing) => {
+        setIsPlaying(playing);
+      });
+      
+      // 添加错误处理
+      const handleAudioError = () => {
         setAutoplayFailed(true);
       };
-
-      mainAudio.addEventListener('error', handleError);
-      secondaryAudio.addEventListener('error', handleError);
-
+      
+      window.addEventListener('audio-error', handleAudioError);
+      
       return () => {
-        mainAudio.removeEventListener('error', handleError);
-        secondaryAudio.removeEventListener('error', handleError);
+        removeListener();
+        window.removeEventListener('audio-error', handleAudioError);
+        // 注意：不要在这里调用cleanup，因为其他组件可能仍在使用AudioManager
       };
     }
-  }, [getRandomTrack]);
+  }, []);
 
-  // 修改播放控制逻辑
-  useEffect(() => {
-    if (!isPlaying) {
-      bgAudioRef.current?.pause();
-      backgroundAudio?.pause(); // 确保次要音频也会暂停
-      return;
+  const toggleAudio = useCallback(() => {
+    if (audioManager.current) {
+      audioManager.current.toggle();
     }
-
-    // 只播放主音轨
-    bgAudioRef.current?.play().catch(err => {
-      console.error("音频播放失败:", err);
-      setIsPlaying(false);
-      setAutoplayFailed(true);
-    });
-
-  }, [isPlaying, backgroundAudio]);
-
-  // 修改价格变化事件处理
-  useEffect(() => {
-    // 确保只创建一个 AudioContext
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+  }, []);
+  
+  const toggleAdvancedAudio = useCallback(() => {
+    if (audioManager.current) {
+      audioManager.current.toggleAdvancedAudio();
+      setAdvancedAudio(audioManager.current.getAdvancedAudioStatus());
     }
-    const currentContext = audioContextRef.current
+  }, []);
 
-    const handlePriceChange = (event: CustomEvent) => {
-      if (!isPlaying) return
-
-      const { direction, isNewData } = event.detail
-      
-      const now = Date.now();
-      if (now - lastSoundTimeRef.current < 5000) {
-        return;
-      }
-      lastSoundTimeRef.current = now;
-
-      // 确保使用同一个 AudioContext
-      if (!currentContext) return
-      
-      // 只在新数据到达时播放次要音频
-      if (isNewData && backgroundAudio) {
-        backgroundAudio.currentTime = 0;
-        backgroundAudio.play()
-          .then(() => {
-            setTimeout(() => {
-              if (!isPlaying) { // 如果音频被关闭，立即停止
-                backgroundAudio.pause();
-              } else {
-                backgroundAudio.pause();
-                backgroundAudio.currentTime = 0;
-              }
-            }, 3000);
-          })
-          .catch(console.error);
-      }
-
-      // 创建更积极的价格变化声音
-      const createChord = () => {
-        const frequencies = direction === "up" 
-          ? [523.25, 659.25, 783.99] // C5, E5, G5 (C major chord)
-          : [493.88, 587.33, 698.46]; // B4, D5, F5 (B diminished chord)
-        
-        frequencies.forEach(freq => {
-          const osc = currentContext.createOscillator();
-          const gain = currentContext.createGain();
-          
-          osc.type = "sine";
-          osc.frequency.value = freq;
-          
-          gain.gain.setValueAtTime(0, currentContext.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, currentContext.currentTime + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.001, currentContext.currentTime + 0.5);
-          
-          osc.connect(gain);
-          gain.connect(currentContext.destination);
-          
-          osc.start();
-          osc.stop(currentContext.currentTime + 0.5);
-        });
-      };
-
-      createChord();
-    }
-
-    window.addEventListener("price-change", handlePriceChange as EventListener)
-
-    return () => {
-      window.removeEventListener("price-change", handlePriceChange as EventListener)
-      // 组件卸载时关闭 AudioContext
-      if (currentContext) {
-        currentContext.close()
-        audioContextRef.current = null
-      }
-      if (backgroundAudio) {
-        backgroundAudio.pause()
-        backgroundAudio.currentTime = 0
-      }
-    }
-  }, [isPlaying, backgroundAudio])
-
-  const handleAudioInitialized = () => {
-    setIsInitialized(true)
-  }
-
-  const toggleAudio = () => {
-    setIsPlaying(!isPlaying)
-  }
-
-  const extraClass = autoplayFailed ? "animate-pulse" : ""
+  const extraClass = autoplayFailed ? "animate-pulse" : "";
   return (
     <div className={className}>
-      <Button
-        variant="outline"
-        size="sm"
-        className={`flex gap-2 items-center w-full ${extraClass}`}
-        onClick={toggleAudio}
-        title={isPlaying ? "Mute" : "Unmute"}
-      >
-        {isPlaying ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-        <span>Audio {isPlaying ? 'On' : 'Off'}</span>
-      </Button>
+      <div className="flex gap-2 items-center">
+        <Button
+          variant="outline"
+          size="sm"
+          className={`flex flex-1 gap-2 items-center ${extraClass}`}
+          onClick={toggleAudio}
+          title={isPlaying ? "Mute" : "Unmute"}
+        >
+          {isPlaying ? <Music2 className="w-4 h-4" /> : <Music className="w-4 h-4 text-muted-foreground" />}
+          <span>Audio {isPlaying ? 'On' : 'Off'}</span>
+        </Button>
+        
+        {/* 高级音频切换按钮 */}
+        {isPlaying && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={toggleAdvancedAudio}
+          >
+            {advancedAudio ? "Basic" : "Advanced"}
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
