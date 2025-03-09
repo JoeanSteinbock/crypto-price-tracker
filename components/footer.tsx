@@ -31,7 +31,7 @@ export function Footer() {
             
             <div className="flex gap-4 text-sm">
               <Link 
-                href="/contact" 
+                href="mailto:info@cryptotick.live"
                 className="text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 Contact
