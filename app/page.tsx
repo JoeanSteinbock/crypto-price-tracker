@@ -151,7 +151,8 @@ export default function Home() {
                   variant="outline"
                   className="flex flex-col gap-2 justify-center items-center w-full h-24 text-lg transition-all hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-900 group"
                 >
-                  <span className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon || crypto.symbol}</span>
+                  {/* <span style={{ color: crypto.color }} className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon || crypto.symbol}</span> */}
+                  <img src={crypto.image} alt={crypto.name} className="w-6 h-6" />
                   <span className="font-medium">{crypto.symbol.toUpperCase()}</span>
                 </Button>
               </Link>
