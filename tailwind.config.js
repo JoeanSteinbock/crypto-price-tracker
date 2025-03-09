@@ -62,11 +62,21 @@ module.exports = {
         blink: {
           '0%, 100%': { color: 'purple' },
           '50%': { color: 'green' },
-        }
+        },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-down': {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'gradient-x': 'gradient-x var(--animation-duration, 4s) linear infinite',
-        'blink': 'blink 1s infinite'
+        'blink': 'blink 1s infinite',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'slide-down': 'slide-down 0.5s ease-out',
       },
       screens: {
         xs: "475px",
@@ -78,6 +88,10 @@ module.exports = {
         'mobileLandscape': {
           'raw': 'only screen and (max-height: 600px) and (orientation: landscape)'
         }
+      },
+      backgroundImage: {
+        'grid-gray-900': 'linear-gradient(to right, rgb(17 24 39 / var(--tw-bg-opacity)) 1px, transparent 1px), linear-gradient(to bottom, rgb(17 24 39 / var(--tw-bg-opacity)) 1px, transparent 1px)',
+        'grid-white': 'linear-gradient(to right, rgb(255 255 255 / var(--tw-bg-opacity)) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 255 255 / var(--tw-bg-opacity)) 1px, transparent 1px)',
       },
     },
   },

@@ -262,7 +262,13 @@ function DonationButton() {
   );
 }
 
-export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { initialCrypto?: string }) {
+export default function CryptoPriceTracker({ 
+  initialCrypto = "bitcoin", 
+  presentationMode = false 
+}: { 
+  initialCrypto?: string,
+  presentationMode?: boolean
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const apiIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -803,8 +809,37 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
     }
   }
 
+  useEffect(() => {
+    // 如果启用了演示模式，添加演示模式类
+    if (presentationMode) {
+      // 检查是否在演示容器中
+      const isInDemoContainer = document.querySelector('.demo-container') !== null;
+      
+      // 只有在不是演示容器中时才添加演示模式类到 body
+      if (!isInDemoContainer) {
+        document.body.classList.add('presentation-mode');
+      } else {
+        // 如果在演示容器中，添加特殊的类到当前组件
+        const container = document.querySelector('.demo-presentation-mode');
+        if (container) {
+          const innerContainer = container.querySelector('div');
+          if (innerContainer) {
+            innerContainer.classList.add('force-presentation-mode');
+          }
+        }
+      }
+    }
+
+    // 清理函数
+    return () => {
+      if (presentationMode) {
+        document.body.classList.remove('presentation-mode');
+      }
+    };
+  }, [presentationMode]);
+
   return (
-    <div className="relative min-h-screen">
+    <div className={`relative ${!presentationMode ? 'min-h-screen' : ''}`}>
       <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0">
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}

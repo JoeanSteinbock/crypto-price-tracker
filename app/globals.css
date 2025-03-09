@@ -246,8 +246,6 @@ body.presentation-mode {
   }
 
   &.dark .stats-grid {
-    /* background: rgba(255, 255, 255, 0.8); */
-    /* border: 1px solid rgba(0, 0, 0, 0.1); */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     color: #000;
   }
@@ -302,5 +300,127 @@ body.presentation-mode {
   animation: heartbeat 2s infinite;
   display: inline-block;
   transform-origin: center;
+}
+
+/* 演示容器样式 */
+.demo-container {
+  overflow: hidden;
+  position: relative;
+  background: #000;
+  pointer-events: none; /* 防止捕获鼠标事件 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 演示模式演示的特殊样式 */
+.demo-presentation-mode {
+  height: 100%;
+  width: 100%;
+  pointer-events: none; /* 防止捕获鼠标事件 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 演示容器中的演示模式 */
+.presentation-container {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none; /* 防止捕获鼠标事件 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 确保演示容器中的控制按钮不可见 */
+.presentation-container .controls-container {
+  display: none !important;
+}
+
+/* 调整演示容器中的内容大小 */
+.presentation-container > div {
+  /* transform: scale(0.9); */
+  transform-origin: center;
+  height: 100%;
+  pointer-events: none; /* 防止捕获鼠标事件 */
+}
+
+/* 强制演示模式样式 */
+.force-presentation-mode {
+  background: #000 !important;
+  color: white !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding-top: 0 !important; /* 减少顶部空间 */
+  min-height: auto !important; /* 覆盖最小高度设置 */
+  height: 100% !important;
+}
+
+/* 强制演示模式中的内部容器 */
+.force-presentation-mode > div {
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* 强制演示模式中的价格显示 */
+.force-presentation-mode .price-display {
+  font-size: 6rem !important;
+  line-height: 1 !important;
+  margin-top: 0 !important;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 强制演示模式中的统计网格 */
+.force-presentation-mode .stats-grid {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 90% !important;
+  max-width: 90% !important;
+  margin: 2rem auto 0 !important;
+  backdrop-filter: blur(10px) !important;
+  padding: 1rem !important;
+  border-radius: 12px !important;
+  z-index: 25 !important;
+  font-size: 1rem !important;
+  opacity: 0.9 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* 隐藏演示模式中的其他元素 */
+.force-presentation-mode .dropdown-container,
+.force-presentation-mode .search-container,
+.force-presentation-mode .audio-controls,
+.force-presentation-mode .controls-container {
+  display: none !important;
+}
+
+/* 隐藏演示模式中的图表 */
+.force-presentation-mode .chart-container {
+  display: none !important;
+}
+
+/* 隐藏演示模式中的属性信息 */
+.force-presentation-mode .attribution {
+  display: none !important;
+}
+
+/* 调整演示模式中的加密货币图标和名称 */
+.force-presentation-mode .crypto-icon-container {
+  margin-bottom: 1rem !important;
+}
+
+/* 调整演示模式中的价格变化指示器 */
+.force-presentation-mode .price-change-indicator {
+  margin-top: 0.5rem !important;
+  font-size: 1.2rem !important;
 }
 
