@@ -92,20 +92,72 @@
 
 /* 演示模式样式 */
 body.presentation-mode {
+  cursor: pointer; /* 指示可点击退出 */
+  
   /* 隐藏控制元素 */
   & .controls-container {
     opacity: 0;
     pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
   }
   
   /* 放大价格显示 */
   & .price-display {
-    font-size: 8rem;
+    font-size: 10rem !important;
+    transition: font-size 0.3s ease-in-out;
+  }
+
+  /* 主容器样式 */
+  & > div > div > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-top: 10vh;
+  }
+
+  /* 价格区域容器 */
+  & > div > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
   
   /* 增加图表可见度 */
   & .chart-container {
     opacity: 0.8;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* 调整统计面板样式 */
+  & .stats-grid {
+    position: fixed;
+    bottom: 2rem;
+    /* left: 48%;
+    transform: translateX(-52%); */
+    background: rgba(225, 225, 225, 0.1);
+    opacity: 0.8;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.1);
+    transition: all 0.3s ease-in-out;
+    /* padding: 1rem; */
+    z-index: 100;
+    width: auto;
+    max-width: 90vw;
+    margin: 0 auto;
+  }
+
+  /* 隐藏其他UI元素 */
+  & .attribution {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* 深色模式适配 */
+  &.dark .stats-grid {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }
 

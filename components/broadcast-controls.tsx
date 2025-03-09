@@ -31,9 +31,33 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
 
   // Enter presentation mode (hide UI elements)
   const enterPresentationMode = useCallback(() => {
-    document.body.classList.toggle('presentation-mode')
-    toast.success('Presentation mode toggled')
-    if (onAction) onAction()
+    const body = document.body;
+    const isInPresentationMode = body.classList.contains('presentation-mode');
+    
+    // Toggle presentation mode
+    body.classList.toggle('presentation-mode');
+    
+    // Add click handler to exit presentation mode
+    if (!isInPresentationMode) {
+      const exitHandler = (e: MouseEvent) => {
+        // Ignore clicks on stats grid to prevent accidental exits
+        if ((e.target as HTMLElement).closest('.stats-grid')) {
+          return;
+        }
+        body.classList.remove('presentation-mode');
+        toast.success('Exited presentation mode');
+        body.removeEventListener('click', exitHandler);
+      };
+      
+      // Add the click handler after a short delay to prevent immediate exit
+      setTimeout(() => {
+        body.addEventListener('click', exitHandler);
+      }, 500);
+      
+      toast.success('Entered presentation mode - Click anywhere to exit');
+    }
+    
+    if (onAction) onAction();
   }, [onAction])
 
   // Start screen sharing/broadcasting

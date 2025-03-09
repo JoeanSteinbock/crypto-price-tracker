@@ -109,7 +109,7 @@ function MobileToolbar() {
             onClick={e => e.stopPropagation()}
           >
             <div className="grid grid-cols-4 gap-2">
-              <AudioController onAction={() => setIsOpen(false)} />
+              <AudioController />
               <BroadcastControls onAction={() => setIsOpen(false)} />
             </div>
 

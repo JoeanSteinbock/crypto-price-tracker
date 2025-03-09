@@ -585,7 +585,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
           </div>
 
           {/* 头部导航栏 */}
-          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8">
+          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container">
             <div className="flex gap-2 items-center">
               <Image
                 src="/logo.svg"
@@ -770,7 +770,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
             <div className="flex items-baseline">
               <span className="mr-2 text-3xl sm:text-4xl">$</span>
               {!isLoading && priceData && displayPrice !== null && (
-                <div className="flex items-baseline text-5xl font-bold sm:text-7xl">
+                <div className="flex items-baseline text-5xl font-bold sm:text-7xl price-display">
                   <span
                     className={`transition-colors duration-200 ${priceDirection === "up" ? "text-green-500" : priceDirection === "down" ? "text-red-500" : ""
                       }`}
@@ -802,7 +802,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Stats grid */}
           {!isLoading && priceData && (
-            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80">
+            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80 stats-grid">
               <div className="flex flex-col">
                 <span className="mb-1 text-sm text-gray-500 dark:text-gray-400">24h Low/High</span>
                 <div className="text-sm font-medium sm:text-base">
@@ -847,7 +847,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Last updated and CoinGecko Attribution */}
           {!isLoading && priceData && (
-            <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400 attribution">
               {/* CoinGecko Attribution - 左侧 */}
               <a
                 href={`https://www.coingecko.com/en/coins/${selectedCrypto.id}`}
