@@ -42,6 +42,7 @@ function DonationButton() {
   const [showModal, setShowModal] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string>("BTC_TAPROOT");
   const [copied, setCopied] = useState(false);
+  const [showBtcMenu, setShowBtcMenu] = useState(false);
   
   // 从环境变量中读取捐赠地址
   const addresses: Record<string, string> = {
@@ -99,6 +100,32 @@ function DonationButton() {
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${prefix}${addresses[selectedCrypto]}`;
   };
   
+  // 切换比特币菜单显示状态
+  const toggleBtcMenu = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止事件冒泡
+    setShowBtcMenu(!showBtcMenu);
+  };
+  
+  // 选择比特币地址类型
+  const selectBtcType = (type: string) => {
+    setSelectedCrypto(type);
+    setShowBtcMenu(false);
+  };
+  
+  // 点击其他地方关闭比特币菜单
+  useEffect(() => {
+    if (!showBtcMenu) return;
+    
+    const handleClickOutside = () => {
+      setShowBtcMenu(false);
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showBtcMenu]);
+  
   return (
     <>
       <button 
@@ -147,8 +174,9 @@ function DonationButton() {
                   ))}
                 
                 {/* 比特币下拉菜单 */}
-                <div className="relative group/btc">
+                <div className="relative">
                   <button
+                    onClick={toggleBtcMenu}
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                       isBitcoinType(selectedCrypto)
                         ? 'bg-primary text-primary-foreground' 
@@ -159,26 +187,31 @@ function DonationButton() {
                     <ChevronDown className="w-3 h-3" />
                   </button>
                   
-                  <div className="hidden overflow-hidden absolute left-0 top-full z-10 mt-1 bg-white rounded-md border border-gray-200 shadow-lg group-hover/btc:block dark:bg-gray-900 dark:border-gray-700">
-                    {Object.keys(addresses)
-                      .filter(crypto => isBitcoinType(crypto))
-                      .map(crypto => (
-                        <button
-                          key={crypto}
-                          onClick={() => setSelectedCrypto(crypto)}
-                          className={`flex items-center w-full px-4 py-2 text-xs text-left transition-colors ${
-                            selectedCrypto === crypto
-                              ? 'bg-gray-100 dark:bg-gray-800 font-medium'
-                              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                          }`}
-                        >
-                          {selectedCrypto === crypto && (
-                            <ChevronRight className="mr-1 w-3 h-3 text-primary" />
-                          )}
-                          {crypto.replace('BTC_', '')}
-                        </button>
-                      ))}
-                  </div>
+                  {showBtcMenu && (
+                    <div className="overflow-hidden absolute left-0 top-full z-10 mt-1 bg-white rounded-md border border-gray-200 shadow-lg dark:bg-gray-900 dark:border-gray-700">
+                      {Object.keys(addresses)
+                        .filter(crypto => isBitcoinType(crypto))
+                        .map(crypto => (
+                          <button
+                            key={crypto}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              selectBtcType(crypto);
+                            }}
+                            className={`flex items-center w-full px-4 py-2 text-xs text-left transition-colors ${
+                              selectedCrypto === crypto
+                                ? 'bg-gray-100 dark:bg-gray-800 font-medium'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            {selectedCrypto === crypto && (
+                              <ChevronRight className="mr-1 w-3 h-3 text-primary" />
+                            )}
+                            {crypto.replace('BTC_', '')}
+                          </button>
+                        ))}
+                    </div>
+                  )}
                 </div>
               </div>
               
