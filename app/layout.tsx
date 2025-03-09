@@ -6,6 +6,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
+export const viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
 export const metadata: Metadata = {
   title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
   description:
@@ -26,7 +34,6 @@ export const metadata: Metadata = {
     title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
     description: "Track cryptocurrency prices in real-time with CryptoTick.live",
   },
-  themeColor: "#000000",
   icons: {
     icon: [
       { url: "/logo.svg", type: "image/svg+xml" },
@@ -40,12 +47,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "CryptoTick.live"
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
   },
   other: {
     "apple-mobile-web-app-capable": "yes",

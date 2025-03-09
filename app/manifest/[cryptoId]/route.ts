@@ -9,7 +9,7 @@ export async function GET(
   
   // 首先尝试从本地数据获取加密货币信息
   const localCrypto = TOP_CRYPTOCURRENCIES.find(c => c.id === cryptoId)
-  
+  console.log('Local crypto:', localCrypto)
   // 如果在本地数据中找到，直接使用本地数据
   if (localCrypto) {
     const manifest = {
@@ -54,6 +54,7 @@ export async function GET(
   
   // 只有在本地数据中找不到时，才尝试从 API 获取
   try {
+    console.log('Fetching crypto info from API')
     const response = await fetch(
       `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`,
       { next: { revalidate: 86400 } } // 缓存24小时
@@ -64,6 +65,7 @@ export async function GET(
     }
     
     const data = await response.json()
+    console.log('Fetched crypto info:', {id: cryptoId, name: data.name, symbol: data.symbol, image: data.image})
     
     const manifest = {
       name: `${data.name} Price - CryptoTick.live`,
@@ -83,14 +85,20 @@ export async function GET(
           purpose: 'any'
         },
         {
-          src: '/icons/icon-192x192.png',
+          src: data.image?.small || '/icons/icon-192x192.png',
           sizes: '192x192',
           type: 'image/png',
           purpose: 'maskable'
         },
         {
+          src: data.image?.thumb || '/icons/icon-192x192.png', 
+          sizes: '128x128',
+          type: 'image/png',
+          purpose: 'maskable'
+        },
+        {
           src: '/icons/icon-512x512.png',
-          sizes: '512x512',
+          sizes: '512x512', 
           type: 'image/png',
           purpose: 'maskable'
         }
@@ -104,6 +112,7 @@ export async function GET(
       }
     })
   } catch (error) {
+    console.error('Error fetching crypto info:', error)
     // 如果 API 调用失败，使用默认加密货币
     const defaultCrypto = TOP_CRYPTOCURRENCIES[0]
     
