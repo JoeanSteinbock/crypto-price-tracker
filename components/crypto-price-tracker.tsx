@@ -34,7 +34,7 @@ const STORAGE_KEY = "cryptotick-favorites"
 
 // 在组件的顶部添加一个日志函数
 const logDebug = (message: string, data?: any) => {
-  console.log(`[CryptoTick] ${message}`, data || '');
+  console.debug(`[CryptoTick] ${message}`, data || '');
 };
 
 export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { initialCrypto?: string }) {
@@ -745,7 +745,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* 主价格显示区域 - 完全透明，只有文字 */}
           <div className="relative z-10 p-4 mb-4 sm:mb-8">
-            <div className="flex items-center mb-4 justify-between">
+            <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
                 {selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
                   <img

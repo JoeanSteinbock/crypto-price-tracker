@@ -24,6 +24,7 @@ class AudioManager {
   private listeners: Set<(isPlaying: boolean) => void> = new Set();
   private lastSoundTime: number = 0;
   private useAdvancedAudio: boolean = false; // 是否使用高级音频功能
+  private audioNodes: any = null; // 存储音频处理节点
 
   private constructor() {
     // 私有构造函数，防止直接创建实例
@@ -168,11 +169,12 @@ class AudioManager {
         .catch(console.error);
     }
     
-    // 创建价格变化音调
-    this.createPriceChangeSound(direction);
+    // 创建价格变化音调 - 根据音频模式调整音量
+    const volume = this.useAdvancedAudio ? 0.2 : 0.1;
+    this.createPriceChangeSound(direction, volume);
   }
   
-  private createPriceChangeSound(direction: string): void {
+  private createPriceChangeSound(direction: string, volume: number = 0.1): void {
     if (!this.audioContext) return;
     
     const frequencies = direction === "up" 
@@ -187,7 +189,7 @@ class AudioManager {
       osc.frequency.value = freq;
       
       gain.gain.setValueAtTime(0, this.audioContext!.currentTime);
-      gain.gain.linearRampToValueAtTime(0.1, this.audioContext!.currentTime + 0.01);
+      gain.gain.linearRampToValueAtTime(volume, this.audioContext!.currentTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext!.currentTime + 0.5);
       
       osc.connect(gain);
@@ -204,6 +206,8 @@ class AudioManager {
   
   public cleanup(): void {
     // 清理资源
+    this.cleanupAudioNodes();
+    
     window.removeEventListener('crypto-changed', this.handleCryptoChange.bind(this));
     window.removeEventListener('price-change', this.handlePriceChange.bind(this) as EventListener);
     
@@ -238,12 +242,58 @@ class AudioManager {
   // 切换高级音频功能
   public toggleAdvancedAudio(): void {
     this.useAdvancedAudio = !this.useAdvancedAudio;
-    // 如果切换到高级音频，可能需要加载AudioGenerator组件
+    
+    // 清理之前的音频连接
+    this.cleanupAudioNodes();
+    
     if (this.useAdvancedAudio) {
-      // 这里可以添加加载AudioGenerator的逻辑
-      console.log("高级音频功能已启用");
+      // 高级音频模式：更丰富的音效、更高的音量
+      if (this.audio) {
+        // 增加音量
+        this.audio.volume = 0.5;
+      }
+      
+      if (this.secondaryAudio) {
+        this.secondaryAudio.volume = 0.4;
+      }
+      
+      console.log("Enhanced audio mode enabled");
     } else {
-      console.log("高级音频功能已禁用");
+      // 基本音频模式：恢复默认设置
+      if (this.audio) {
+        this.audio.volume = 0.3;
+      }
+      
+      if (this.secondaryAudio) {
+        this.secondaryAudio.volume = 0.2;
+      }
+      
+      console.log("Basic audio mode enabled");
+    }
+    
+    // 通知所有监听器状态变化
+    this.notifyListeners();
+  }
+  
+  // 清理音频处理节点
+  private cleanupAudioNodes(): void {
+    if (this.audioNodes) {
+      try {
+        // 断开连接
+        if (this.audioNodes.source) {
+          this.audioNodes.source.disconnect();
+        }
+        if (this.audioNodes.equalizer) {
+          this.audioNodes.equalizer.disconnect();
+        }
+        if (this.audioNodes.compressor) {
+          this.audioNodes.compressor.disconnect();
+        }
+      } catch (e) {
+        console.error("Error cleaning up audio nodes:", e);
+      }
+      
+      this.audioNodes = null;
     }
   }
   
@@ -323,15 +373,18 @@ export function AudioController({ className }: AudioControllerProps) {
         {/* 高级音频切换按钮 */}
         {isPlaying && (
           <Button
-            variant="outline"
+            variant={advancedAudio ? "default" : "outline"}
             size="sm"
-            className="text-xs"
+            className={`text-xs transition-all duration-300 ${advancedAudio ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : ''}`}
             onClick={toggleAdvancedAudio}
+            title={advancedAudio ? "Switch to basic audio mode" : "Switch to enhanced audio mode with louder sounds"}
           >
-            {advancedAudio ? "Basic" : "Advanced"}
+            {advancedAudio ? "Louder" : "Normal"}
           </Button>
         )}
       </div>
+      
+      {/* 音频模式说明 - 移除以简化界面 */}
     </div>
   )
 }
