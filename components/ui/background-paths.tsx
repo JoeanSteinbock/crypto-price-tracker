@@ -4,48 +4,229 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+// 黄金比例 - 用于创建更加和谐的动画时间
+const PHI = 1.618033988749895;
+
+function generatePriceChartPath(width: number, height: number, segments: number, volatility: number, position: number): string {
+    // 起始点
+    let path = `M0,${height / 2}`;
+    
+    // 生成随机价格点
+    const points = [];
+    const segmentWidth = width / segments;
+    
+    for (let i = 0; i <= segments; i++) {
+        const x = i * segmentWidth;
+        // 使用正弦波和随机值的组合来模拟价格波动
+        const randomFactor = Math.random() * volatility - volatility / 2;
+        const sinFactor = Math.sin(i * 0.5) * volatility * 1.5;
+        const trendFactor = (i / segments) * volatility * position * 2; // 添加整体趋势
+        
+        const y = height / 2 + randomFactor + sinFactor + trendFactor;
+        points.push({ x, y });
+    }
+    
+    // 使用贝塞尔曲线连接点，使曲线更平滑
+    for (let i = 0; i < points.length - 1; i++) {
+        const current = points[i];
+        const next = points[i + 1];
+        
+        // 控制点 - 在两点之间创建平滑过渡
+        const controlX1 = current.x + (next.x - current.x) / 3;
+        const controlY1 = current.y;
+        const controlX2 = current.x + (next.x - current.x) * 2 / 3;
+        const controlY2 = next.y;
+        
+        path += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${next.x},${next.y}`;
+    }
+    
+    return path;
+}
+
 function FloatingPaths({ position }: { position: number }) {
-    const paths = Array.from({ length: 36 }, (_, i) => ({
-        id: i,
-        d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-            380 - i * 5 * position
-        } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-            152 - i * 5 * position
-        } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-            684 - i * 5 * position
-        } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-        color: `rgba(15,23,42,${0.1 + i * 0.03})`,
-        width: 0.5 + i * 0.03,
-    }));
+    // 创建多条价格图表线，每条有不同的波动性和颜色
+    const chartPaths = Array.from({ length: 8 }, (_, i) => {
+        // 使用黄金比例创建更加和谐的波动性
+        const volatility = 25 + i * (PHI * 3);
+        const width = 1200;
+        const height = 600;
+        // 使用斐波那契数列创建更加和谐的段数
+        const segments = 13 + Math.floor(i * PHI); 
+        
+        // 使用不同的颜色透明度，创建深度感
+        const opacity = 0.05 + (i / 20);
+        
+        // 使用不同的颜色，创建渐变效果
+        const hue = position > 0 
+            ? 210 + (i * 3) // 蓝色系
+            : 140 - (i * 3); // 绿色系
+            
+        return {
+            id: i,
+            d: generatePriceChartPath(width, height, segments, volatility, position * (i % 2 === 0 ? 1 : -1)),
+            color: position > 0 
+                ? `hsla(${hue}, 80%, 50%, ${opacity})` // 蓝色系
+                : `hsla(${hue}, 80%, 50%, ${opacity})`, // 绿色系
+            width: 1 + i * 0.4,
+            // 使用斐波那契数列创建更加和谐的动画时间
+            duration: 15 + (i * PHI * 2),
+            delay: i * PHI,
+        };
+    });
 
     return (
         <div className="absolute inset-0 pointer-events-none">
             <svg
-                className="w-full h-full text-slate-950 dark:text-white"
-                viewBox="0 0 696 316"
+                className="w-full h-full"
+                viewBox="0 0 1200 600"
                 fill="none"
+                preserveAspectRatio="xMidYMid slice"
             >
-                <title>Background Paths</title>
-                {paths.map((path) => (
+                <title>Crypto Price Charts</title>
+                {chartPaths.map((path) => (
                     <motion.path
                         key={path.id}
                         d={path.d}
-                        stroke="currentColor"
+                        stroke={path.color}
                         strokeWidth={path.width}
-                        strokeOpacity={0.1 + path.id * 0.03}
-                        initial={{ pathLength: 0.3, opacity: 0.6 }}
+                        fill="none"
+                        initial={{ pathLength: 0, opacity: 0 }}
                         animate={{
                             pathLength: 1,
-                            opacity: [0.3, 0.6, 0.3],
-                            pathOffset: [0, 1, 0],
+                            opacity: 0.8,
+                            pathOffset: [0, 1],
                         }}
                         transition={{
-                            duration: 20 + Math.random() * 10,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: "linear",
+                            pathLength: {
+                                duration: 3 + path.id * 0.5,
+                                ease: "easeInOut",
+                                delay: path.delay,
+                            },
+                            opacity: {
+                                duration: 3 + path.id * 0.5,
+                                ease: "easeInOut",
+                                delay: path.delay,
+                            },
+                            pathOffset: {
+                                duration: path.duration,
+                                repeat: Infinity,
+                                ease: "linear",
+                                delay: 3 + path.delay,
+                            }
                         }}
                     />
                 ))}
+                
+                {/* 添加移动的点，模拟价格变动 */}
+                {chartPaths.filter((_, i) => i % 3 === 0).map((path, pathIndex) => (
+                    Array.from({ length: 2 }, (_, i) => {
+                        // 使用黄金比例创建更加和谐的动画时间
+                        const duration = 10 + (pathIndex * PHI) + (i * PHI * 2);
+                        const delay = (pathIndex * PHI * 1.5) + (i * PHI * 3);
+                        
+                        return (
+                            <motion.circle
+                                key={`moving-dot-${pathIndex}-${i}`}
+                                cx={100 + (i * 400)}
+                                cy={300 + (Math.sin(i * 0.8) * 50 * position)}
+                                r={3 + (pathIndex * 0.5)}
+                                fill={path.color.replace('0.05', '0.9')}
+                                filter={`blur(${pathIndex * 0.3}px)`}
+                                initial={{ opacity: 0 }}
+                                animate={{ 
+                                    opacity: [0, 0.8, 0.8, 0],
+                                    x: [0, 1200],
+                                    y: [
+                                        300 + (Math.sin(0) * 50 * position),
+                                        300 + (Math.sin(1) * 50 * position),
+                                        300 + (Math.sin(2) * 50 * position),
+                                        300 + (Math.sin(3) * 50 * position),
+                                        300 + (Math.sin(4) * 50 * position),
+                                        300 + (Math.sin(5) * 50 * position),
+                                    ],
+                                }}
+                                transition={{
+                                    opacity: {
+                                        duration: duration,
+                                        times: [0, 0.1, 0.9, 1],
+                                        repeat: Infinity,
+                                        repeatDelay: duration / 2,
+                                        delay: delay,
+                                    },
+                                    x: {
+                                        duration: duration,
+                                        repeat: Infinity,
+                                        repeatDelay: duration / 2,
+                                        delay: delay,
+                                    },
+                                    y: {
+                                        duration: duration,
+                                        repeat: Infinity,
+                                        repeatDelay: duration / 2,
+                                        delay: delay,
+                                    }
+                                }}
+                            />
+                        );
+                    })
+                ))}
+                
+                {/* 添加价格波动点 */}
+                {Array.from({ length: 12 }, (_, i) => {
+                    // 使用黄金比例创建更加和谐的动画时间
+                    const duration = 1 + (i % 3) * PHI / 2;
+                    const delay = i * PHI / 2;
+                    const x = 50 + (i * 100);
+                    const y = 300 + (Math.sin(i * 0.5) * 80 * position);
+                    
+                    return (
+                        <motion.circle
+                            key={`pulse-dot-${i}`}
+                            cx={x}
+                            cy={y}
+                            r={2 + (i % 3)}
+                            fill={position > 0 
+                                ? `hsla(${210 + (i * 5)}, 80%, 50%, 0.8)` 
+                                : `hsla(${140 - (i * 5)}, 80%, 50%, 0.8)`
+                            }
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ 
+                                scale: [0, 1 + (i % 3) * 0.5, 0],
+                                opacity: [0, 0.8, 0],
+                            }}
+                            transition={{
+                                duration: duration,
+                                repeat: Infinity,
+                                repeatDelay: duration * PHI,
+                                delay: delay,
+                                ease: "easeInOut",
+                            }}
+                        />
+                    );
+                })}
+                
+                {/* 添加价格标签 */}
+                {position > 0 && (
+                    <motion.g
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 4, duration: 1 }}
+                    >
+                        <rect x="1000" y="150" width="80" height="30" rx="4" fill="rgba(59,130,246,0.2)" />
+                        <text x="1040" y="170" textAnchor="middle" fill="rgba(59,130,246,0.8)" fontSize="14" fontFamily="monospace">+2.4%</text>
+                    </motion.g>
+                )}
+                
+                {position < 0 && (
+                    <motion.g
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 4, duration: 1 }}
+                    >
+                        <rect x="900" y="350" width="80" height="30" rx="4" fill="rgba(34,197,94,0.2)" />
+                        <text x="940" y="370" textAnchor="middle" fill="rgba(34,197,94,0.8)" fontSize="14" fontFamily="monospace">+1.8%</text>
+                    </motion.g>
+                )}
             </svg>
         </div>
     );
@@ -66,8 +247,8 @@ export function BackgroundPaths({
     const subtitleWords = subtitle.split(" ");
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-white dark:bg-neutral-950">
-            <div className="absolute inset-0">
+        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-900">
+            <div className="absolute inset-0 opacity-30 dark:opacity-40">
                 <FloatingPaths position={1} />
                 <FloatingPaths position={-1} />
             </div>
