@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   keywords:
     "cryptocurrency, bitcoin price, ethereum price, crypto tracker, live crypto prices, crypto broadcast, crypto streaming, digital signage, crypto display, large screen crypto, crypto TV display, crypto dashboard, BTC, ETH, SOL, market cap, trading volume, crypto presentation",
   generator: "CryptoTick.live",
+  manifest: "/manifest.json",
   authors: [{ name: "CryptoTick.live" }],
   openGraph: {
     title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",

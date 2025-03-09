@@ -2,7 +2,6 @@
 
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
 import { useEffect } from "react"
-import Image from "next/image"
 
 export default function Home() {
   useEffect(() => {
