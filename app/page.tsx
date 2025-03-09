@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown } from "lucide-react"
+import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
 import Link from "next/link"
@@ -49,9 +49,22 @@ function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
   );
 }
 
+// 随机选择加密货币
+function getRandomCryptos(count: number, excludeIds: string[] = []) {
+  // 过滤掉已排除的加密货币
+  const availableCryptos = TOP_CRYPTOCURRENCIES.filter(crypto => !excludeIds.includes(crypto.id));
+  
+  // 随机打乱数组
+  const shuffled = [...availableCryptos].sort(() => 0.5 - Math.random());
+  
+  // 返回指定数量的加密货币
+  return shuffled.slice(0, count);
+}
+
 export default function Home() {
   const [showDemo, setShowDemo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [randomCryptos, setRandomCryptos] = useState<typeof TOP_CRYPTOCURRENCIES>([]);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -95,6 +108,10 @@ export default function Home() {
         }
       }
     };
+
+    // 选择随机加密货币，排除前4个常见的
+    const topCryptoIds = TOP_CRYPTOCURRENCIES.slice(0, 4).map(c => c.id);
+    setRandomCryptos(getRandomCryptos(8, topCryptoIds));
 
     window.addEventListener('scroll', handleScroll);
     return () => {
@@ -140,19 +157,47 @@ export default function Home() {
               Perfect for streamers, content creators, and digital displays. Track crypto prices with style.
             </p>
 
-            {/* Quick Access Grid */}
-            <div className="grid grid-cols-2 gap-4 mx-auto mb-12 max-w-4xl md:grid-cols-4">
-              {TOP_CRYPTOCURRENCIES.slice(0, 4).map((crypto) => (
-                <Link key={crypto.id} href={`/${crypto.id}`}>
-                  <Button
-                    variant="outline"
-                    className="flex flex-col gap-2 justify-center items-center w-full h-24 text-lg transition-all hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-900 group"
-                  >
-                    <span className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon}</span>
-                    <span className="font-medium">{crypto.symbol.toUpperCase()}</span>
-                  </Button>
-                </Link>
-              ))}
+            {/* Popular Cryptocurrencies */}
+            <div className="mb-8">
+              <h3 className="mb-4 text-xl font-semibold">Popular Cryptocurrencies</h3>
+              <div className="grid grid-cols-2 gap-4 mx-auto mb-8 max-w-4xl md:grid-cols-4">
+                {TOP_CRYPTOCURRENCIES.slice(0, 4).map((crypto) => (
+                  <Link key={crypto.id} href={`/${crypto.id}`}>
+                    <Button
+                      variant="outline"
+                      className="flex flex-col gap-2 justify-center items-center w-full h-24 text-lg transition-all hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-900 group"
+                    >
+                      <span className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon || crypto.symbol}</span>
+                      <span className="font-medium">{crypto.symbol.toUpperCase()}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Discover More Cryptocurrencies */}
+            <div className="mb-12">
+              <h3 className="flex gap-2 justify-center items-center mb-4 text-xl font-semibold">
+                <Sparkles className="w-5 h-5 text-yellow-500" />
+                Discover More
+              </h3>
+              <div className="grid grid-cols-2 gap-3 mx-auto max-w-4xl sm:grid-cols-4">
+                {randomCryptos.map((crypto) => (
+                  <Link key={crypto.id} href={`/${crypto.id}`}>
+                    <Button
+                      variant="ghost"
+                      className="flex gap-2 justify-start items-center px-3 py-2 w-full text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      {crypto.image ? (
+                        <img src={crypto.image} alt={crypto.name} className="w-5 h-5" />
+                      ) : (
+                        <span>{crypto.icon || crypto.symbol}</span>
+                      )}
+                      <span>{crypto.name}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {/* Main CTA */}
