@@ -8,6 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
 import { BackgroundPaths } from "@/components/ui/background-paths"
+import { DonationButton } from "@/components/donation-button"
 
 // 同步自 layout.tsx 的关键词
 // export const metadata = {
@@ -270,44 +271,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Donation Section */}
-      <section className="relative py-20 bg-white dark:bg-black">
-        <div className="container px-4 mx-auto">
-          <div className="mb-12 text-center">
-            <h2 className="flex gap-2 justify-center items-center mb-4 text-3xl font-bold">
-              <Heart className="w-8 h-8 text-red-500" />
-              Support the Project
-            </h2>
-            <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              CryptoTick.live is a free and open-source project. If you find it useful, consider supporting its development.
-            </p>
-          </div>
-          
-          <div className="flex justify-center">
-            <div className="p-6 max-w-md text-center bg-white rounded-xl shadow-lg dark:bg-gray-800">
-              <div className="flex justify-center mb-4">
-                <Coffee className="w-12 h-12 text-amber-600" />
-              </div>
-              <h3 className="mb-4 text-xl font-semibold">Support via Crypto</h3>
-              <p className="mb-6 text-gray-600 dark:text-gray-400">
-                You can support this project by donating cryptocurrency. Click the button below to view donation options.
-              </p>
-              <Link href="/bitcoin">
-                <Button className="flex gap-2 items-center">
-                  <Heart className="w-4 h-4 text-red-500" />
-                  Support the Project
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              </Link>
-              <p className="mt-4 text-sm text-gray-500">
-                When using the app, click the "Support" button in the footer to view donation options.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
+      {/* Final CTA Section with Donation Button */}
       <section className="relative py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50 opacity-50 dark:from-blue-950/20 dark:to-green-950/20" />
         <div className="container relative px-4 mx-auto text-center">
@@ -315,12 +279,20 @@ export default function Home() {
           <p className="mx-auto mb-12 max-w-2xl text-xl text-gray-600 dark:text-gray-400">
             Choose from over 1000 cryptocurrencies and start tracking in real-time. No registration required.
           </p>
-          <Link href="/bitcoin">
-            <Button size="lg" className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg transition-all hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 hover:shadow-xl">
-              Launch Tracker
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
+          <div className="flex flex-col gap-4 justify-center items-center sm:flex-row">
+            <Link href="/bitcoin">
+              <Button size="lg" className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg transition-all hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 hover:shadow-xl">
+                Launch Tracker
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            
+            <div className="flex justify-center items-center p-2 h-12 rounded-lg shadow-md backdrop-blur-sm bg-white/80 dark:bg-gray-800/80">
+              <div className="flex gap-2 items-center px-8 py-0">
+                  <DonationButton className="!text-lg" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
