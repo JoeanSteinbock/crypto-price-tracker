@@ -26,7 +26,6 @@ export const metadata: Metadata = {
     title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
     description: "Track cryptocurrency prices in real-time with CryptoTick.live",
   },
-  manifest: "/manifest.json",
   themeColor: "#000000",
   icons: {
     icon: [
@@ -73,7 +72,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CryptoTick.live" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#000000" />
-        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

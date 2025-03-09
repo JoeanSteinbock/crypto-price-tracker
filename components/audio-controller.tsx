@@ -36,12 +36,12 @@ export function AudioController() {
     }
   }, [])
 
-  const getAudioContext = () => {
+  const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
     }
     return audioContextRef.current
-  }
+  }, [])
 
   // 随机选择背景音乐
   const getRandomTrack = useCallback(() => {
@@ -125,18 +125,26 @@ export function AudioController() {
 
   // 修改价格变化事件处理
   useEffect(() => {
+    // 确保只创建一个 AudioContext
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    const currentContext = audioContextRef.current
+
     const handlePriceChange = (event: CustomEvent) => {
       if (!isPlaying) return
 
-      const { direction, isNewData } = event.detail // 从事件中获取是否是新数据
-
-      // 检查是否应该播放声音（5秒节流）
+      const { direction, isNewData } = event.detail
+      
       const now = Date.now();
       if (now - lastSoundTimeRef.current < 5000) {
-        return; // 如果距离上次播放不到5秒，则跳过
+        return;
       }
       lastSoundTimeRef.current = now;
 
+      // 确保使用同一个 AudioContext
+      if (!currentContext) return
+      
       // 只在新数据到达时播放次要音频
       if (isNewData && backgroundAudio) {
         backgroundAudio.currentTime = 0;
@@ -155,30 +163,27 @@ export function AudioController() {
       }
 
       // 创建更积极的价格变化声音
-      const audioContext = getAudioContext()
-
-      // 创建更悦耳的声音
       const createChord = () => {
         const frequencies = direction === "up" 
           ? [523.25, 659.25, 783.99] // C5, E5, G5 (C major chord)
           : [493.88, 587.33, 698.46]; // B4, D5, F5 (B diminished chord)
         
         frequencies.forEach(freq => {
-          const osc = audioContext.createOscillator();
-          const gain = audioContext.createGain();
+          const osc = currentContext.createOscillator();
+          const gain = currentContext.createGain();
           
           osc.type = "sine";
           osc.frequency.value = freq;
           
-          gain.gain.setValueAtTime(0, audioContext.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+          gain.gain.setValueAtTime(0, currentContext.currentTime);
+          gain.gain.linearRampToValueAtTime(0.1, currentContext.currentTime + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, currentContext.currentTime + 0.5);
           
           osc.connect(gain);
-          gain.connect(audioContext.destination);
+          gain.connect(currentContext.destination);
           
           osc.start();
-          osc.stop(audioContext.currentTime + 0.5);
+          osc.stop(currentContext.currentTime + 0.5);
         });
       };
 
@@ -189,13 +194,17 @@ export function AudioController() {
 
     return () => {
       window.removeEventListener("price-change", handlePriceChange as EventListener)
-      // 确保清理时停止次要音频
+      // 组件卸载时关闭 AudioContext
+      if (currentContext) {
+        currentContext.close()
+        audioContextRef.current = null
+      }
       if (backgroundAudio) {
-        backgroundAudio.pause();
-        backgroundAudio.currentTime = 0;
+        backgroundAudio.pause()
+        backgroundAudio.currentTime = 0
       }
     }
-  }, [isPlaying, backgroundAudio]);
+  }, [isPlaying, backgroundAudio])
 
   const handleAudioInitialized = () => {
     setIsInitialized(true)
@@ -206,20 +215,17 @@ export function AudioController() {
   }
 
   return (
-    <div className="flex gap-2 items-center">
+    <div>
       <Button
-        variant="ghost"
-        size="icon"
+        variant="outline"
+        size="sm"
+        className={`${autoplayFailed ? "animate-pulse" : ""} w-full flex items-center gap-2`}
         onClick={toggleAudio}
         title={isPlaying ? "Mute" : "Unmute"}
-        className={autoplayFailed ? "animate-pulse" : ""}
       >
-        {isPlaying ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        {isPlaying ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        <span>音频{isPlaying ? '开启' : '关闭'}</span>
       </Button>
-      <AudioGenerator
-        isPlaying={isPlaying}
-        onAudioInitialized={handleAudioInitialized}
-      />
     </div>
   )
 }
