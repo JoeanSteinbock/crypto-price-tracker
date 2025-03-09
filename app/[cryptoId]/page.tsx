@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import TOP_CRYPTOCURRENCIES from '@/data/cryptocurrencies'
 import CryptoPriceTracker from '@/components/crypto-price-tracker'
+import { generateKeywords } from '../metadata'
 
 export async function generateMetadata({ params }: { params: { cryptoId: string } }): Promise<Metadata> {
   const { cryptoId } = await params
@@ -17,7 +18,12 @@ export async function generateMetadata({ params }: { params: { cryptoId: string 
       icons: {
         icon: localCrypto.image ? [{ url: localCrypto.image }] : undefined
       },
-      keywords: `${localCrypto.name}, ${localCrypto.symbol.toUpperCase()}, cryptocurrency, crypto tracker, live prices`
+      keywords: generateKeywords([
+        localCrypto.name.toLowerCase(),
+        localCrypto.symbol.toLowerCase(),
+        `${localCrypto.symbol.toLowerCase()} price`,
+        `${localCrypto.name.toLowerCase()} price`
+      ])
     }
   }
 
@@ -41,7 +47,12 @@ export async function generateMetadata({ params }: { params: { cryptoId: string 
       icons: {
         icon: data.image?.large ? [{ url: data.image.large }] : undefined
       },
-      keywords: `${data.name}, ${data.symbol.toUpperCase()}, cryptocurrency, crypto tracker, live prices`
+      keywords: generateKeywords([
+        data.name.toLowerCase(),
+        data.symbol.toLowerCase(),
+        `${data.symbol.toLowerCase()} price`,
+        `${data.name.toLowerCase()} price`
+      ])
     }
   } catch (error) {
     // 如果 API 调用失败，使用默认加密货币
@@ -53,7 +64,13 @@ export async function generateMetadata({ params }: { params: { cryptoId: string 
       manifest: `/manifest/${cryptoId}`,
       icons: {
         icon: defaultCrypto.image ? [{ url: defaultCrypto.image }] : undefined
-      }
+      },
+      keywords: generateKeywords([
+        defaultCrypto.name.toLowerCase(),
+        defaultCrypto.symbol.toLowerCase(),
+        `${defaultCrypto.symbol.toLowerCase()} price`,
+        `${defaultCrypto.name.toLowerCase()} price`
+      ])
     }
   }
 }

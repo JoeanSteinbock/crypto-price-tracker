@@ -3,6 +3,11 @@
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
 import { useEffect } from "react"
 
+// 同步自 layout.tsx 的关键词
+export const metadata = {
+  keywords: "cryptocurrency, bitcoin price, ethereum price, crypto tracker, live crypto prices, crypto broadcast, crypto streaming, digital signage, crypto display, large screen crypto, crypto TV display, crypto dashboard, BTC, ETH, SOL, market cap, trading volume, crypto presentation"
+}
+
 export default function Home() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
