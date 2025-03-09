@@ -8,10 +8,17 @@ import { Button } from "@/components/ui/button"
 
 const bgTracks = [
   "https://cdn.pixabay.com/audio/2024/12/26/audio_5686c7b0c3.mp3",
-  "https://cdn.pixabay.com/audio/2025/02/06/audio_97edd31405.mp3", 
+  "https://cdn.pixabay.com/audio/2025/02/06/audio_97edd31405.mp3",
   "https://cdn.pixabay.com/audio/2024/12/01/audio_968fc36840.mp3",
   "https://cdn.pixabay.com/audio/2024/11/05/audio_27b3644bf7.mp3",
-  "https://cdn.pixabay.com/audio/2022/03/29/audio_321d17982c.mp3"
+  "https://cdn.pixabay.com/audio/2022/03/29/audio_321d17982c.mp3",
+  "https://cdn.pixabay.com/audio/2025/03/05/audio_c359e40a3e.mp3",
+  "https://cdn.pixabay.com/audio/2024/11/24/audio_e1d4c85046.mp3",
+  "https://cdn.pixabay.com/audio/2024/04/11/audio_52d3ab883f.mp3",
+  "https://cdn.pixabay.com/audio/2021/12/05/audio_c548e46009.mp3",
+  "https://cdn.pixabay.com/audio/2023/04/13/audio_39b7d5ebea.mp3",
+  "https://cdn.pixabay.com/audio/2024/05/02/audio_0ec3e1300a.mp3",
+  "https://cdn.pixabay.com/audio/2024/07/23/audio_9196e2a1ac.mp3",
 ]
 
 // 全局音频管理器
@@ -34,11 +41,11 @@ class AudioManager {
       this.audio.loop = true;
       this.audio.volume = 0.3;
       this.setRandomTrack();
-      
+
       // 次要音频（用于价格变化等事件）
       this.secondaryAudio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=electronic-future-beats-117997.mp3");
       this.secondaryAudio.volume = 0.2;
-      
+
       // 设置音频上下文（用于生成音调）
       try {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -46,22 +53,22 @@ class AudioManager {
         console.error("无法创建音频上下文:", e);
         this.dispatchAudioError();
       }
-      
+
       // 添加错误处理
       if (this.audio) {
         this.audio.addEventListener('error', this.dispatchAudioError.bind(this));
       }
-      
+
       if (this.secondaryAudio) {
         this.secondaryAudio.addEventListener('error', this.dispatchAudioError.bind(this));
       }
-      
+
       // 监听加密货币变化事件
       window.addEventListener('crypto-changed', this.handleCryptoChange.bind(this));
-      
+
       // 监听价格变化事件
       window.addEventListener('price-change', this.handlePriceChange.bind(this) as EventListener);
-      
+
       // 检查是否应该使用高级音频功能
       this.checkAdvancedAudioSupport();
     }
@@ -76,11 +83,25 @@ class AudioManager {
 
   public setRandomTrack(): void {
     if (!this.audio) return;
-    const randomTrack = bgTracks[Math.floor(Math.random() * bgTracks.length)];
+
+    // 获取当前曲目，以便选择不同的曲目
+    const currentSrc = this.audio.src;
+    let randomTrack;
+
+    // 确保选择一个不同的曲目
+    do {
+      randomTrack = bgTracks[Math.floor(Math.random() * bgTracks.length)];
+    } while (bgTracks.length > 1 && randomTrack === currentSrc);
+
     this.audio.src = randomTrack;
-    
+    console.log("Playing track:", randomTrack);
+
+    // 移除之前的事件监听器（如果有）
+    this.audio.onended = null;
+
     // 添加结束事件监听器，播放下一首
     this.audio.onended = () => {
+      console.log("Track ended, playing next random track");
       this.setRandomTrack();
       if (this.isPlaying) {
         this.audio?.play().catch(err => console.error("Failed to play next track:", err));
@@ -90,7 +111,7 @@ class AudioManager {
 
   public toggle(): void {
     if (!this.audio) return;
-    
+
     if (this.isPlaying) {
       this.audio.pause();
       if (this.secondaryAudio) {
@@ -105,7 +126,7 @@ class AudioManager {
       });
       this.isPlaying = true;
     }
-    
+
     // 通知所有监听器
     this.notifyListeners();
   }
@@ -124,7 +145,7 @@ class AudioManager {
       listener(this.isPlaying);
     }
   }
-  
+
   private handleCryptoChange(): void {
     // 确保音频状态一致
     if (this.audio) {
@@ -139,19 +160,19 @@ class AudioManager {
       }
     }
   }
-  
+
   private handlePriceChange(event: CustomEvent): void {
     if (!this.isPlaying) return;
-    
+
     const { direction, isNewData } = event.detail;
-    
+
     // 限制声音频率（至少间隔5秒）
     const now = Date.now();
     if (now - this.lastSoundTime < 5000) {
       return;
     }
     this.lastSoundTime = now;
-    
+
     // 播放次要音频（仅在有新数据时）
     if (isNewData && this.secondaryAudio && this.isPlaying) {
       this.secondaryAudio.currentTime = 0;
@@ -168,66 +189,66 @@ class AudioManager {
         })
         .catch(console.error);
     }
-    
+
     // 创建价格变化音调 - 根据音频模式调整音量
     const volume = this.useAdvancedAudio ? 0.2 : 0.1;
     this.createPriceChangeSound(direction, volume);
   }
-  
+
   private createPriceChangeSound(direction: string, volume: number = 0.1): void {
     if (!this.audioContext) return;
-    
-    const frequencies = direction === "up" 
+
+    const frequencies = direction === "up"
       ? [523.25, 659.25, 783.99] // C5, E5, G5 (C major chord)
       : [493.88, 587.33, 698.46]; // B4, D5, F5 (B diminished chord)
-    
+
     frequencies.forEach(freq => {
       const osc = this.audioContext!.createOscillator();
       const gain = this.audioContext!.createGain();
-      
+
       osc.type = "sine";
       osc.frequency.value = freq;
-      
+
       gain.gain.setValueAtTime(0, this.audioContext!.currentTime);
       gain.gain.linearRampToValueAtTime(volume, this.audioContext!.currentTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext!.currentTime + 0.5);
-      
+
       osc.connect(gain);
       gain.connect(this.audioContext!.destination);
-      
+
       osc.start();
       osc.stop(this.audioContext!.currentTime + 0.5);
     });
   }
-  
+
   private dispatchAudioError(): void {
     window.dispatchEvent(new Event('audio-error'));
   }
-  
+
   public cleanup(): void {
     // 清理资源
     this.cleanupAudioNodes();
-    
+
     window.removeEventListener('crypto-changed', this.handleCryptoChange.bind(this));
     window.removeEventListener('price-change', this.handlePriceChange.bind(this) as EventListener);
-    
+
     if (this.audio) {
       this.audio.removeEventListener('error', this.dispatchAudioError.bind(this));
       this.audio.pause();
       this.audio.src = '';
     }
-    
+
     if (this.secondaryAudio) {
       this.secondaryAudio.removeEventListener('error', this.dispatchAudioError.bind(this));
       this.secondaryAudio.pause();
       this.secondaryAudio.src = '';
     }
-    
+
     if (this.audioContext) {
       this.audioContext.close();
       this.audioContext = null;
     }
-    
+
     this.listeners.clear();
   }
 
@@ -238,43 +259,43 @@ class AudioManager {
     // 目前简单地设置为false，表示默认不使用高级音频
     this.useAdvancedAudio = false;
   }
-  
+
   // 切换高级音频功能
   public toggleAdvancedAudio(): void {
     this.useAdvancedAudio = !this.useAdvancedAudio;
-    
+
     // 清理之前的音频连接
     this.cleanupAudioNodes();
-    
+
     if (this.useAdvancedAudio) {
       // 高级音频模式：更丰富的音效、更高的音量
       if (this.audio) {
         // 增加音量
         this.audio.volume = 0.5;
       }
-      
+
       if (this.secondaryAudio) {
         this.secondaryAudio.volume = 0.4;
       }
-      
+
       console.log("Enhanced audio mode enabled");
     } else {
       // 基本音频模式：恢复默认设置
       if (this.audio) {
         this.audio.volume = 0.3;
       }
-      
+
       if (this.secondaryAudio) {
         this.secondaryAudio.volume = 0.2;
       }
-      
+
       console.log("Basic audio mode enabled");
     }
-    
+
     // 通知所有监听器状态变化
     this.notifyListeners();
   }
-  
+
   // 清理音频处理节点
   private cleanupAudioNodes(): void {
     if (this.audioNodes) {
@@ -292,11 +313,11 @@ class AudioManager {
       } catch (e) {
         console.error("Error cleaning up audio nodes:", e);
       }
-      
+
       this.audioNodes = null;
     }
   }
-  
+
   // 获取高级音频状态
   public getAdvancedAudioStatus(): boolean {
     return this.useAdvancedAudio;
@@ -317,23 +338,23 @@ export function AudioController({ className }: AudioControllerProps) {
     // 初始化音频管理器
     if (typeof window !== 'undefined') {
       audioManager.current = AudioManager.getInstance();
-      
+
       // 同步初始状态
       setIsPlaying(audioManager.current.getStatus());
       setAdvancedAudio(audioManager.current.getAdvancedAudioStatus());
-      
+
       // 添加状态变化监听器
       const removeListener = audioManager.current.addListener((playing) => {
         setIsPlaying(playing);
       });
-      
+
       // 添加错误处理
       const handleAudioError = () => {
         setAutoplayFailed(true);
       };
-      
+
       window.addEventListener('audio-error', handleAudioError);
-      
+
       return () => {
         removeListener();
         window.removeEventListener('audio-error', handleAudioError);
@@ -347,7 +368,7 @@ export function AudioController({ className }: AudioControllerProps) {
       audioManager.current.toggle();
     }
   }, []);
-  
+
   const toggleAdvancedAudio = useCallback(() => {
     if (audioManager.current) {
       audioManager.current.toggleAdvancedAudio();
@@ -369,7 +390,7 @@ export function AudioController({ className }: AudioControllerProps) {
           {isPlaying ? <Music2 className="w-4 h-4" /> : <Music className="w-4 h-4 text-muted-foreground" />}
           <span>Audio {isPlaying ? 'On' : 'Off'}</span>
         </Button>
-        
+
         {/* 高级音频切换按钮 */}
         {isPlaying && (
           <Button
@@ -383,7 +404,7 @@ export function AudioController({ className }: AudioControllerProps) {
           </Button>
         )}
       </div>
-      
+
       {/* 音频模式说明 - 移除以简化界面 */}
     </div>
   )
