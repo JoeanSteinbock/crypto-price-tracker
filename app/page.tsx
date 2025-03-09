@@ -14,9 +14,12 @@ import CryptoPriceTracker from "@/components/crypto-price-tracker"
 // }
 
 // 创建一个特殊的演示模式组件
-function DemoCryptoPriceTracker() {
+function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
   // 使用 useEffect 手动添加演示模式类
   useEffect(() => {
+    // 如果是移动设备，不应用演示模式
+    if (isMobile) return;
+    
     // 找到组件的容器元素
     const container = document.querySelector('.demo-presentation-mode');
     if (container) {
@@ -34,13 +37,13 @@ function DemoCryptoPriceTracker() {
         }
       }
     }
-  }, []);
+  }, [isMobile]);
   
   return (
-    <div className="demo-presentation-mode h-full">
+    <div className="h-full demo-presentation-mode">
       <CryptoPriceTracker 
         initialCrypto="bitcoin" 
-        presentationMode={true} 
+        presentationMode={!isMobile} // 只在非移动设备上启用演示模式
       />
     </div>
   );
@@ -48,6 +51,7 @@ function DemoCryptoPriceTracker() {
 
 export default function Home() {
   const [showDemo, setShowDemo] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -69,6 +73,17 @@ export default function Home() {
       deferredPrompt = e;
     });
 
+    // 检测是否是移动设备
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 小于 768px 视为移动设备
+    };
+    
+    // 初始检测
+    checkIfMobile();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkIfMobile);
+
     // 添加滚动监听器来控制演示区域的显示
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
@@ -82,7 +97,10 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', checkIfMobile);
+    };
   }, []);
 
   return (
@@ -160,28 +178,32 @@ export default function Home() {
 
       {/* Demo Section with Bitcoin Tracker in Presentation Mode */}
       <section id="demo-section" className="relative py-16 bg-gray-900 dark:bg-black">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-3">
+        <div className="container px-4 mx-auto">
+          <div className="mb-8 text-center">
+            <h2 className="mb-3 text-3xl font-bold text-white">
               See It In Action
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Experience the real-time Bitcoin tracker in presentation mode. Perfect for streaming and broadcasting.
+            <p className="mx-auto max-w-2xl text-xl text-gray-300">
+              Experience the real-time Bitcoin tracker{isMobile ? "." : " in presentation mode. Perfect for streaming and broadcasting."}
+              {isMobile && " For the full presentation mode, try on a larger screen."}
             </p>
           </div>
           
           <div className={`transition-all duration-1000 transform ${showDemo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
-            <div className="max-w-4xl mx-auto bg-gray-800/50 backdrop-blur-md p-2 rounded-xl border border-gray-700/50 shadow-2xl">
-              <div className="rounded-lg overflow-hidden demo-container relative" style={{ height: '500px', isolation: 'isolate' }}>
+            <div className="p-2 mx-auto max-w-4xl rounded-xl border shadow-2xl backdrop-blur-md bg-gray-800/50 border-gray-700/50">
+              <div className="overflow-hidden relative rounded-lg demo-container" style={{ height: '500px', isolation: 'isolate' }}>
                 {showDemo && (
                   <div className="absolute inset-0 z-10 pointer-events-none presentation-container">
-                    <DemoCryptoPriceTracker />
+                    <DemoCryptoPriceTracker isMobile={isMobile} />
                   </div>
                 )}
               </div>
             </div>
-            <p className="text-center text-gray-400 mt-4 text-sm">
-              This is a preview of the presentation mode. Controls are disabled in this demo.
+            <p className="mt-4 text-sm text-center text-gray-400">
+              {isMobile ? 
+                "This is a simplified preview. For the full presentation mode, try on a larger screen." :
+                "This is a preview of the presentation mode. Controls are disabled in this demo."
+              }
             </p>
           </div>
         </div>

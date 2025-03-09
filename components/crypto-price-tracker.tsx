@@ -839,7 +839,7 @@ export default function CryptoPriceTracker({
   }, [presentationMode]);
 
   return (
-    <div className={`relative ${!presentationMode ? 'min-h-screen' : ''}`}>
+    <div className={`relative ${!presentationMode ? 'min-h-screen w-[100vw]' : ''}`}>
       <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0">
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
