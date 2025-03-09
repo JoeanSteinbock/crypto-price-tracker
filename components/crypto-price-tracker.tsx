@@ -805,7 +805,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
   return (
     <div className="relative min-h-screen">
-      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white landscape:pt-0">
+      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white md:landscape:pt-4 max-md:landscape:pt-0">
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
           <div className="absolute inset-0 z-20 pointer-events-none">
@@ -813,7 +813,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
           </div>
 
           {/* 头部导航栏 */}
-          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container landscape:flex-row-reverse landscape:mb-4">
+          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container max-md:landscape:flex-row-reverse max-md:landscape:mb-4">
             <div className="flex gap-2 items-center logo-container">
               <Image
                 src="/logo.svg"
@@ -1037,7 +1037,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
             {/* Price change indicator */}
             {!isLoading && priceData && (
-              <div className="flex items-center mt-2 landscape:hidden">
+              <div className="flex items-center mt-2 max-md:landscape:hidden">
                 <div
                   className={`flex items-center ${priceData.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}
                 >
@@ -1055,28 +1055,28 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Stats grid */}
           {!isLoading && priceData && (
-            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80 landscape:fixed landscape:bottom-6 landscape:left-1/2 landscape:-translate-x-1/2 landscape:grid-cols-4 landscape:w-auto landscape:min-w-[600px] landscape:max-w-[90vw] landscape:p-4 landscape:gap-8 landscape:bg-white/90 landscape:dark:bg-black/90">
+            <div className="grid relative z-10 grid-cols-1 gap-3 p-3 rounded-xl border backdrop-blur-md border-gray-300/80 bg-gray-100/70 xs:grid-cols-2 md:grid-cols-4 sm:p-4 sm:gap-4 dark:bg-gray-800/70 dark:border-gray-600/80 max-md:landscape:fixed max-md:landscape:bottom-6 max-md:landscape:left-1/2 max-md:landscape:-translate-x-1/2 max-md:landscape:grid-cols-4 max-md:landscape:w-auto max-md:landscape:min-w-[600px] max-md:landscape:max-w-[90vw] max-md:landscape:p-4 max-md:landscape:gap-8 max-md:landscape:bg-white/90 max-md:landscape:dark:bg-black/90">
               <div className="flex flex-col">
-                <span className="mb-1 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 landscape:text-xs">24h Low/High</span>
-                <div className="text-sm font-medium whitespace-nowrap sm:text-base landscape:text-base">
+                <span className="mb-1 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 max-md:landscape:text-xs">24h Low/High</span>
+                <div className="text-sm font-medium whitespace-nowrap sm:text-base max-md:landscape:text-base">
                   ${priceData.low_24h.toLocaleString()} / ${priceData.high_24h.toLocaleString()}
                 </div>
               </div>
 
               <div className="flex flex-col">
-                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 landscape:text-xs">Volume (24h)</span>
-                <div className="text-sm font-medium sm:text-base landscape:text-base">{formatNumber(priceData.total_volume)}</div>
+                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 max-md:landscape:text-xs">Volume (24h)</span>
+                <div className="text-sm font-medium sm:text-base max-md:landscape:text-base">{formatNumber(priceData.total_volume)}</div>
               </div>
 
               <div className="flex flex-col">
-                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 landscape:text-xs">Mkt. Cap</span>
-                <div className="text-sm font-medium sm:text-base landscape:text-base">{formatNumber(priceData.market_cap)}</div>
+                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 max-md:landscape:text-xs">Mkt. Cap</span>
+                <div className="text-sm font-medium sm:text-base max-md:landscape:text-base">{formatNumber(priceData.market_cap)}</div>
               </div>
 
               <div className="flex flex-col">
-                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 landscape:text-xs">24h Change</span>
+                <span className="mb-1 text-sm text-gray-500 dark:text-gray-400 max-md:landscape:text-xs">24h Change</span>
                 <div className={`font-medium ${priceData.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
-                  <div className="flex items-center text-sm sm:text-base landscape:text-base">
+                  <div className="flex items-center text-sm sm:text-base max-md:landscape:text-base">
                     {priceData.price_change_percentage_24h >= 0 ? (
                       <ArrowUp className="mr-1 w-4 h-4" />
                     ) : (
@@ -1098,7 +1098,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
           {/* Last updated and CoinGecko Attribution */}
           {!isLoading && priceData && (
-            <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400 attribution landscape:fixed landscape:top-2 landscape:left-1/2 landscape:-translate-x-1/2 landscape:mt-0 landscape:px-4 landscape:py-1.5 landscape:rounded-full landscape:bg-white/80 landscape:dark:bg-black/80 landscape:backdrop-blur-md landscape:shadow-lg landscape:border landscape:border-gray-200/50 landscape:dark:border-gray-700/50">
+            <div className="flex relative z-10 justify-between items-center mt-3 text-sm text-gray-500 dark:text-gray-400 attribution max-md:landscape:fixed max-md:landscape:top-2 max-md:landscape:left-1/2 max-md:landscape:-translate-x-1/2 max-md:landscape:mt-0 max-md:landscape:px-4 max-md:landscape:py-1.5 max-md:landscape:rounded-full max-md:landscape:bg-white/80 max-md:landscape:dark:bg-black/80 max-md:landscape:backdrop-blur-md max-md:landscape:shadow-lg max-md:landscape:border max-md:landscape:border-gray-200/50 max-md:landscape:dark:border-gray-700/50">
               {/* CoinGecko Attribution - 左侧 */}
               <a
                 href={`https://www.coingecko.com/en/coins/${selectedCrypto.id}`}
@@ -1106,7 +1106,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                 rel="noopener noreferrer"
                 className="flex gap-1 items-center opacity-70 transition-opacity hover:opacity-100"
               >
-                <span className="hidden sm:inline landscape:hidden">Powered by</span>
+                <span className="hidden sm:inline max-md:landscape:hidden">Powered by</span>
                 <img
                   src="https://static.coingecko.com/s/coingecko-logo-8903d34ce19ca4be1c81f0db30e924154750d208683fad7ae6f2ce06c76d0a56.png"
                   alt="CoinGecko Logo"
@@ -1121,7 +1121,7 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
 
               {/* Last updated - 右侧 */}
               <span className="text-xs whitespace-nowrap sm:text-sm">
-                <span className="hidden sm:inline landscape:hidden">Last updated: </span>
+                <span className="hidden sm:inline max-md:landscape:hidden">Last updated: </span>
                 {new Date(priceData.last_updated).toLocaleTimeString()}
               </span>
             </div>
