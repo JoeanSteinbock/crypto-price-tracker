@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown, Sparkles } from "lucide-react"
+import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown, Sparkles, Heart, Coffee, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
 import Link from "next/link"
 import Image from "next/image"
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
+import { BackgroundPaths } from "@/components/ui/background-paths"
 
 // 同步自 layout.tsx 的关键词
 // export const metadata = {
@@ -51,14 +52,31 @@ function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
 
 // 随机选择加密货币
 function getRandomCryptos(count: number, excludeIds: string[] = []) {
-  // 过滤掉已排除的加密货币
-  const availableCryptos = TOP_CRYPTOCURRENCIES.filter(crypto => !excludeIds.includes(crypto.id));
+  // 稳定币列表
+  const stableCoins = ["tether", "usd-coin", "binance-usd", "dai", "frax", "true-usd", "usdd", "pax-dollar", "gemini-dollar", "husd"];
+  
+  // 过滤掉已排除的加密货币和稳定币
+  const availableCryptos = TOP_CRYPTOCURRENCIES.filter(
+    crypto => !excludeIds.includes(crypto.id) && !stableCoins.includes(crypto.id)
+  );
   
   // 随机打乱数组
   const shuffled = [...availableCryptos].sort(() => 0.5 - Math.random());
   
   // 返回指定数量的加密货币
   return shuffled.slice(0, count);
+}
+
+// 自定义 Hero 组件，使用 BackgroundPaths
+function Hero() {
+  return (
+    <BackgroundPaths 
+      title="CryptoTick.live" 
+      subtitle="Real-time Cryptocurrency Price Tracker for Live Streaming and Broadcasting"
+      buttonText="Launch Tracker"
+      buttonLink="/bitcoin"
+    />
+  );
 }
 
 export default function Home() {
@@ -122,104 +140,55 @@ export default function Home() {
 
   return (
     <main className="overflow-hidden relative min-h-screen bg-white dark:bg-black">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950/20 dark:to-green-950/20" />
+      {/* 使用新的 Hero 组件 */}
+      <Hero />
 
-      {/* Hero Section with Animated Background */}
-      <div className="relative">
-        <div className="overflow-hidden absolute inset-0">
-          <div className="absolute inset-0 bg-grid-gray-900/[0.04] bg-[size:60px_60px] dark:bg-grid-white/[0.02]" />
-        </div>
-        
-        <div className="flex relative flex-col justify-center items-center px-4 py-24 min-h-screen text-center">
-          <div className="animate-fade-in">
-            <div className="flex gap-3 items-center mb-8 animate-slide-down">
-              <Image
-                src="/logo.svg"
-                alt="CryptoTick.live Logo"
-                width={64}
-                height={64}
-                priority
-                className="animate-pulse"
-              />
-              <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
-                CryptoTick<span className="text-blue-500">.live</span>
-              </h1>
-            </div>
-            
-            <h2 className="mb-6 max-w-3xl text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 sm:text-5xl lg:text-6xl dark:from-white dark:to-gray-200">
-              Real-time Cryptocurrency Price Tracker for{" "}
-              <span className="text-blue-500">Live Streaming</span> and{" "}
-              <span className="text-green-500">Broadcasting</span>
-            </h2>
-            
-            <p className="mx-auto mb-12 max-w-xl text-xl text-gray-600 dark:text-gray-400">
-              Perfect for streamers, content creators, and digital displays. Track crypto prices with style.
-            </p>
-
-            {/* Popular Cryptocurrencies */}
-            <div className="mb-8">
-              <h3 className="mb-4 text-xl font-semibold">Popular Cryptocurrencies</h3>
-              <div className="grid grid-cols-2 gap-4 mx-auto mb-8 max-w-4xl md:grid-cols-4">
-                {TOP_CRYPTOCURRENCIES.slice(0, 4).map((crypto) => (
-                  <Link key={crypto.id} href={`/${crypto.id}`}>
-                    <Button
-                      variant="outline"
-                      className="flex flex-col gap-2 justify-center items-center w-full h-24 text-lg transition-all hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-900 group"
-                    >
-                      <span className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon || crypto.symbol}</span>
-                      <span className="font-medium">{crypto.symbol.toUpperCase()}</span>
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Discover More Cryptocurrencies */}
-            <div className="mb-12">
-              <h3 className="flex gap-2 justify-center items-center mb-4 text-xl font-semibold">
-                <Sparkles className="w-5 h-5 text-yellow-500" />
-                Discover More
-              </h3>
-              <div className="grid grid-cols-2 gap-3 mx-auto max-w-4xl sm:grid-cols-4">
-                {randomCryptos.map((crypto) => (
-                  <Link key={crypto.id} href={`/${crypto.id}`}>
-                    <Button
-                      variant="ghost"
-                      className="flex gap-2 justify-start items-center px-3 py-2 w-full text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                    >
-                      {crypto.image ? (
-                        <img src={crypto.image} alt={crypto.name} className="w-5 h-5" />
-                      ) : (
-                        <span>{crypto.icon || crypto.symbol}</span>
-                      )}
-                      <span>{crypto.name}</span>
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Main CTA */}
-            <div className="flex flex-col gap-6 items-center">
-              <Link href="/bitcoin">
-                <Button size="lg" className="px-8 py-6 text-lg bg-blue-600 shadow-lg transition-all hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 hover:shadow-xl">
-                  Launch Tracker
-                  <ArrowRight className="ml-2 w-5 h-5" />
+      {/* Popular Cryptocurrencies Section */}
+      <section className="relative py-24 bg-white dark:bg-black">
+        <div className="container px-4 mx-auto">
+          <h2 className="mb-12 text-3xl font-bold text-center">Popular Cryptocurrencies</h2>
+          <div className="grid grid-cols-2 gap-4 mx-auto max-w-4xl md:grid-cols-4">
+            {TOP_CRYPTOCURRENCIES.slice(0, 4).map((crypto) => (
+              <Link key={crypto.id} href={`/${crypto.id}`}>
+                <Button
+                  variant="outline"
+                  className="flex flex-col gap-2 justify-center items-center w-full h-24 text-lg transition-all hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-900 group"
+                >
+                  <span className="text-3xl transition-transform transform group-hover:scale-110">{crypto.icon || crypto.symbol}</span>
+                  <span className="font-medium">{crypto.symbol.toUpperCase()}</span>
                 </Button>
               </Link>
-              
-              <button 
-                onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex gap-2 items-center text-sm text-gray-500 transition-colors dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              >
-                See It In Action
-                <ArrowDown className="w-4 h-4 animate-bounce" />
-              </button>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Discover More Cryptocurrencies */}
+      <section className="relative py-16 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="container px-4 mx-auto">
+          <h2 className="flex gap-2 justify-center items-center mb-8 text-2xl font-semibold text-center">
+            <Sparkles className="w-5 h-5 text-yellow-500" />
+            Discover More
+          </h2>
+          <div className="grid grid-cols-2 gap-3 mx-auto max-w-4xl sm:grid-cols-4">
+            {randomCryptos.map((crypto) => (
+              <Link key={crypto.id} href={`/${crypto.id}`}>
+                <Button
+                  variant="ghost"
+                  className="flex gap-2 justify-start items-center px-3 py-2 w-full text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  {crypto.image ? (
+                    <img src={crypto.image} alt={crypto.name} className="w-5 h-5" />
+                  ) : (
+                    <span>{crypto.icon || crypto.symbol}</span>
+                  )}
+                  <span>{crypto.name}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Demo Section with Bitcoin Tracker in Presentation Mode */}
       <section id="demo-section" className="relative py-16 bg-gray-900 dark:bg-black">
@@ -296,6 +265,43 @@ export default function Home() {
                 <h3 className="mb-3 text-xl font-semibold">Presentation Mode</h3>
                 <p className="text-gray-600 dark:text-gray-400">Full-screen display with clean interface for professional use</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Donation Section */}
+      <section className="relative py-20 bg-white dark:bg-black">
+        <div className="container px-4 mx-auto">
+          <div className="mb-12 text-center">
+            <h2 className="flex gap-2 justify-center items-center mb-4 text-3xl font-bold">
+              <Heart className="w-8 h-8 text-red-500" />
+              Support the Project
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+              CryptoTick.live is a free and open-source project. If you find it useful, consider supporting its development.
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="p-6 max-w-md text-center bg-white rounded-xl shadow-lg dark:bg-gray-800">
+              <div className="flex justify-center mb-4">
+                <Coffee className="w-12 h-12 text-amber-600" />
+              </div>
+              <h3 className="mb-4 text-xl font-semibold">Support via Crypto</h3>
+              <p className="mb-6 text-gray-600 dark:text-gray-400">
+                You can support this project by donating cryptocurrency. Click the button below to view donation options.
+              </p>
+              <Link href="/bitcoin">
+                <Button className="flex gap-2 items-center">
+                  <Heart className="w-4 h-4 text-red-500" />
+                  Support the Project
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              </Link>
+              <p className="mt-4 text-sm text-gray-500">
+                When using the app, click the "Support" button in the footer to view donation options.
+              </p>
             </div>
           </div>
         </div>
