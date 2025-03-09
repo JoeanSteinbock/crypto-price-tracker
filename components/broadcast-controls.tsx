@@ -34,6 +34,14 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
     const body = document.body;
     const isInPresentationMode = body.classList.contains('presentation-mode');
     
+    // 关闭所有打开的菜单和对话框，但不删除它们
+    const openMenus = document.querySelectorAll('[role="dialog"], [role="menu"], [data-state="open"]');
+    openMenus.forEach(menu => {
+      if (menu instanceof HTMLElement) {
+        menu.setAttribute('data-presentation-hidden', 'true');
+      }
+    });
+    
     // Toggle presentation mode
     body.classList.toggle('presentation-mode');
     
@@ -44,20 +52,19 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
         if ((e.target as HTMLElement).closest('.stats-grid')) {
           return;
         }
+        
+        // Exit presentation mode
         body.classList.remove('presentation-mode');
-        toast.success('Exited presentation mode');
-        body.removeEventListener('click', exitHandler);
+        document.removeEventListener('click', exitHandler);
+        
+        if (onAction) onAction();
       };
       
-      // Add the click handler after a short delay to prevent immediate exit
+      // Add a small delay before enabling the click handler to prevent immediate exit
       setTimeout(() => {
-        body.addEventListener('click', exitHandler);
-      }, 500);
-      
-      toast.success('Entered presentation mode - Click anywhere to exit');
+        document.addEventListener('click', exitHandler);
+      }, 300);
     }
-    
-    if (onAction) onAction();
   }, [onAction])
 
   // Start screen sharing/broadcasting
@@ -65,6 +72,7 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
     try {
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
+          // @ts-ignore - cursor is supported in modern browsers but not in TypeScript definitions
           cursor: "always"
         },
         audio: false

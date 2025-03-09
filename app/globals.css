@@ -102,6 +102,18 @@ body.presentation-mode {
     transition: opacity 0.3s ease-in-out;
   }
 
+  /* 隐藏所有菜单和弹出窗口，但保留元素 */
+  & [role="dialog"],
+  & [role="menu"],
+  & [data-state="open"],
+  & .dropdown-content,
+  & .menu-content,
+  & .settings-panel {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
   /* 添加退出提示 */
   &::after {
     content: "Click anywhere to exit";
@@ -234,8 +246,8 @@ body.presentation-mode {
   }
 
   &.dark .stats-grid {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    /* background: rgba(255, 255, 255, 0.8); */
+    /* border: 1px solid rgba(0, 0, 0, 0.1); */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     color: #000;
   }
