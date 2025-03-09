@@ -134,7 +134,7 @@ function DonationButton() {
         title="Support this project"
       >
         <Coffee className="w-3.5 h-3.5" />
-        <span>Support</span>
+        <span className="hidden xs:inline">Support</span>
         <Heart className="w-3 h-3 text-red-500 opacity-70 heartbeat group-hover:opacity-100" />
       </button>
       
@@ -1107,7 +1107,8 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex gap-1 items-center opacity-70 transition-opacity hover:opacity-100"
-              >Powered by
+              >
+                <span className="hidden sm:inline">Powered by</span>
                 <img
                   src="https://static.coingecko.com/s/coingecko-logo-8903d34ce19ca4be1c81f0db30e924154750d208683fad7ae6f2ce06c76d0a56.png"
                   alt="CoinGecko Logo"
@@ -1121,8 +1122,9 @@ export default function CryptoPriceTracker({ initialCrypto = "bitcoin" }: { init
               </div>
 
               {/* Last updated - 右侧 */}
-              <span>
-                Last updated: {new Date(priceData.last_updated).toLocaleTimeString()}
+              <span className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Last updated: </span>
+                {new Date(priceData.last_updated).toLocaleTimeString()}
               </span>
             </div>
           )}
