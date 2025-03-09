@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown, Sparkles, Heart, Coffee, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
+import { CryptoCurrency, getTopNCryptos, TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
 import Link from "next/link"
 import Image from "next/image"
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
@@ -54,13 +54,9 @@ function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
 // 随机选择加密货币
 function getRandomCryptos(count: number, excludeIds: string[] = []) {
   // 稳定币列表
-  const stableCoins = ["tether", "usd-coin", "binance-usd", "dai", "frax", "true-usd", "usdd", "pax-dollar", "gemini-dollar", "husd"];
   
   // 过滤掉已排除的加密货币和稳定币
-  const availableCryptos = TOP_CRYPTOCURRENCIES.filter(
-    crypto => !excludeIds.includes(crypto.id) && !stableCoins.includes(crypto.id)
-  );
-  
+  const availableCryptos = getTopNCryptos(count, excludeIds);
   // 随机打乱数组
   const shuffled = [...availableCryptos].sort(() => 0.5 - Math.random());
   
@@ -129,7 +125,7 @@ export default function Home() {
     };
 
     // 选择随机加密货币，排除前4个常见的
-    const topCryptoIds = TOP_CRYPTOCURRENCIES.slice(0, 4).map(c => c.id);
+    const topCryptoIds = getTopNCryptos(4).map(c => c.id);
     setRandomCryptos(getRandomCryptos(8, topCryptoIds));
 
     window.addEventListener('scroll', handleScroll);
@@ -149,7 +145,7 @@ export default function Home() {
         <div className="container px-4 mx-auto">
           <h2 className="mb-12 text-3xl font-bold text-center">Popular Cryptocurrencies</h2>
           <div className="grid grid-cols-2 gap-4 mx-auto max-w-4xl md:grid-cols-4">
-            {TOP_CRYPTOCURRENCIES.slice(0, 4).map((crypto) => (
+            {getTopNCryptos(4).map((crypto) => (
               <Link key={crypto.id} href={`/${crypto.id}`}>
                 <Button
                   variant="outline"

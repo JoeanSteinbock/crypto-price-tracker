@@ -7,6 +7,8 @@ export type CryptoCurrency = {
   color?: string
 }
 
+export const STABLE_COINS = ["tether", "usd-coin", "binance-usd", "dai", "frax", "true-usd", "usdd", "pax-dollar", "gemini-dollar", "husd"];
+
 // 前 100 个加密货币的静态数据
 export const TOP_CRYPTOCURRENCIES: CryptoCurrency[] = [
   {
@@ -712,6 +714,10 @@ export const TOP_CRYPTOCURRENCIES: CryptoCurrency[] = [
 // 导出默认的加密货币列表（可以是前12个或其他数量）
 export const DEFAULT_CRYPTOCURRENCIE_IDS = ["bitcoin", "ethereum", "solana", "binancecoin", "dogecoin", "pi-network"]
 export const DEFAULT_CRYPTOCURRENCIES = TOP_CRYPTOCURRENCIES.filter(crypto => DEFAULT_CRYPTOCURRENCIE_IDS.includes(crypto.id))
+
+export function getTopNCryptos(n: number, excludeIds?: string[]): CryptoCurrency[] {
+  return TOP_CRYPTOCURRENCIES.filter(crypto => !STABLE_COINS.includes(crypto.id) && !excludeIds?.includes(crypto.id)).slice(0, n);
+}
 
 // 按ID查找加密货币
 export function getCryptocurrencyById(id: string): CryptoCurrency | undefined {

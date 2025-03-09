@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { TOP_CRYPTOCURRENCIES, DEFAULT_CRYPTOCURRENCIES, CryptoCurrency } from "../data/cryptocurrencies"
 import { AnimatedGradientText } from "./animated-logo-text"
 import { DonationButton } from "@/components/donation-button"
+import Link from "next/link"
 
 type PriceData = {
   current_price: number
@@ -626,24 +627,28 @@ export default function CryptoPriceTracker({
           {/* 头部导航栏 */}
           <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container mobileLandscape:flex-row-reverse mobileLandscape:mb-4">
             <div className="flex gap-2 items-center logo-container">
-              <Image
-                src="/logo.svg"
-                alt="CryptoTick.live Logo"
-                width={32}
-                height={32}
-                priority
-              />
-              <h1 className="text-xl font-bold sm:text-2xl">CryptoTick
-                <AnimatedGradientText
-                  className="text-sm font-bold"
-                  colorFrom="#00ff87"
-                  colorTo="#60a5fa"
-                  speed={6}
-                >
-                  <span className="animate-[blink_1s_infinite] text-md">.</span>
-                  live
-                </AnimatedGradientText>
-              </h1>
+              <Link href="/">
+                <div className="flex gap-2 items-center cursor-pointer">
+                  <Image
+                    src="/logo.svg"
+                    alt="CryptoTick.live Logo"
+                    width={32}
+                    height={32}
+                    priority
+                  />
+                  <h1 className="text-xl font-bold sm:text-2xl">CryptoTick
+                    <AnimatedGradientText
+                      className="text-sm font-bold"
+                      colorFrom="#00ff87"
+                      colorTo="#60a5fa"
+                      speed={6}
+                    >
+                      <span className="animate-[blink_1s_infinite] text-md">.</span>
+                      live
+                    </AnimatedGradientText>
+                  </h1>
+                </div>
+              </Link>
             </div>
             <div className="flex gap-2 items-center">
               <ToolbarMenu />
