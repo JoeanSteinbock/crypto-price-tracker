@@ -106,15 +106,6 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
         <Button 
           variant="outline" 
           className="flex flex-col justify-center items-center p-2 h-16"
-          onClick={enterPresentationMode}
-        >
-          <Monitor className="mb-1 w-5 h-5" />
-          <span className="text-xs">Present</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="flex flex-col justify-center items-center p-2 h-16"
           onClick={startScreenShare}
         >
           <Cast className="mb-1 w-5 h-5" />
@@ -139,7 +130,7 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
         <Button
           variant="outline"
           size="sm"
-          className="justify-start"
+          className="justify-start hidden md:flex"
           onClick={enterPresentationMode}
         >
           <Monitor className="mr-2 w-4 h-4" />
@@ -175,6 +166,7 @@ export function BroadcastControls({ layout = 'horizontal', onAction }: Broadcast
         size="icon"
         onClick={enterPresentationMode}
         title="Presentation Mode"
+        className="hidden md:inline-flex"
       >
         <Monitor className="w-4 h-4" />
       </Button>
