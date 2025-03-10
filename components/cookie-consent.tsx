@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export function CookieConsent() {
+// 分离出使用 useSearchParams 的子组件
+function CookieConsentContent() {
   const [showConsent, setShowConsent] = useState(false)
   const searchParams = useSearchParams()
-  const presentationMode = searchParams.get('pm') === '1' || searchParams.get('pm') === 'true'
+  const presentationMode = searchParams?.get('pm') === '1' || searchParams?.get('pm') === 'true'
 
   useEffect(() => {
-    // If in presentation mode, automatically grant consent
+    // 如果是演示模式，自动授予 cookie 同意
     if (presentationMode) {
       localStorage.setItem('cookie-consent', 'true')
       if (typeof window !== 'undefined' && window.gtag) {
@@ -22,13 +24,13 @@ export function CookieConsent() {
       return
     }
 
-    // Check if user has already consented to cookies
+    // 检查用户是否已经同意 cookies
     const hasConsented = localStorage.getItem('cookie-consent')
     if (!hasConsented) {
       setShowConsent(true)
     }
 
-    // If user has consented, ensure Google Analytics works properly
+    // 如果用户已同意，确保 Google Analytics 正常工作
     if (hasConsented === 'true' && typeof window !== 'undefined' && window.gtag) {
       window.gtag('consent', 'update', {
         'analytics_storage': 'granted'
@@ -84,5 +86,14 @@ export function CookieConsent() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 主组件
+export function CookieConsent() {
+  return (
+    <Suspense fallback={null}>
+      <CookieConsentContent />
+    </Suspense>
   )
 }
