@@ -59,7 +59,7 @@ export function CookieConsent() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={declineCookies}>
-            Decline
+            Reject All
           </Button>
           <Button size="sm" onClick={acceptCookies}>
             Accept All
