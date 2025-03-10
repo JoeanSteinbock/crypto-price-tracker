@@ -744,10 +744,10 @@ export default function CryptoPriceTracker({
 
   return (
     <div className={`relative ${!presentationMode ? 'min-h-screen w-[100vw]' : ''}`}>
-      <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] lg:w-[100vw] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0 mobileLandscape:min-w-[100dvw]">
+      <div className={`flex flex-col justify-${presentationMode ? "start" : "center"} items-center p-4 min-h-[100dvh] lg:w-[100vw] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0 mobileLandscape:min-w-[100dvw]`}>
         {/* 修改 UTC+8 时间戳组件位置 */}
         {presentationMode && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 px-3 py-2 text-white bg-black/40 rounded-md dark:bg-white/15 backdrop-blur-sm shadow-lg border border-white/10">
+          <div className="flex fixed top-4 left-1/2 z-50 gap-2 items-center px-3 py-2 text-white rounded-md border shadow-lg backdrop-blur-sm transform -translate-x-1/2 bg-black/40 dark:bg-white/15 border-white/10">
             <Clock className="w-4 h-4" />
             <span>{currentTime}</span>
             <span className="text-xs opacity-70">(UTC+8)</span>
