@@ -77,8 +77,11 @@ export async function generateMetadata({ params }: { params: { cryptoId: string 
 
 export default async function CryptoPage({ params, searchParams }: { params: { cryptoId: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
   const { cryptoId } = await params
-  const presentationMode = searchParams?.pm === '1'
-  return <CryptoPriceTracker initialCrypto={cryptoId} presentationMode={presentationMode} />
+  const { pm } = await searchParams
+  
+  const presentationMode = (pm === '1' || pm === 'true')
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  return <CryptoPriceTracker initialCrypto={cryptoId} presentationMode={presentationMode && !isMobile} />
 }
 
 // 为所有本地加密货币生成静态路径，以提高性能并减少 API 调用

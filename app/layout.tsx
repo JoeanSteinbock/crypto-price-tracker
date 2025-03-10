@@ -90,7 +90,6 @@ export default function RootLayout({
             </div>
             <ClientFooter />
           </div>
-          <TailwindIndicator />
           <CookieConsent />
         </ThemeProvider>
       </body>
