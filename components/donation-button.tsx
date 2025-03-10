@@ -98,6 +98,23 @@ export function DonationButton({ className = "", hideTextOnMobile = true }: Dona
     };
   }, [showBtcMenu]);
 
+  // 点击ESC键或点击外部关闭模态框
+  useEffect(() => {
+    if (!showModal) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowModal(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showModal]);
+
   // 防止模态框打开时页面滚动
   useEffect(() => {
     if (showModal) {
@@ -124,7 +141,10 @@ export function DonationButton({ className = "", hideTextOnMobile = true }: Dona
       </button>
       
       {showModal && (
-        <div className="min-w-[480px] bottom-[200px] fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+        <div 
+          className="min-w-[480px] bottom-[200px] fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
+          onClick={() => setShowModal(false)}
+        >
           <div 
             className="overflow-hidden relative m-4 w-full max-w-md bg-white rounded-xl shadow-2xl dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
