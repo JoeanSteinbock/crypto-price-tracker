@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowRight, Cast, Maximize2, Volume2, Zap, ArrowDown, Sparkles, Heart, Coffee, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { CryptoCurrency, getTopNCryptos, TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
+import { CryptoCurrency, getTopNCryptos, STABLE_COINS, TOP_CRYPTOCURRENCIES } from "@/data/cryptocurrencies"
 import Link from "next/link"
 import Image from "next/image"
 import CryptoPriceTracker from "@/components/crypto-price-tracker"
@@ -54,9 +54,8 @@ function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
 // 随机选择加密货币
 function getRandomCryptos(count: number, excludeIds: string[] = []) {
   // 稳定币列表
-  
   // 过滤掉已排除的加密货币和稳定币
-  const availableCryptos = getTopNCryptos(count, excludeIds);
+  const availableCryptos = TOP_CRYPTOCURRENCIES.filter(crypto => !excludeIds.includes(crypto.id) && !STABLE_COINS.includes(crypto.id));
   // 随机打乱数组
   const shuffled = [...availableCryptos].sort(() => 0.5 - Math.random());
   
@@ -173,6 +172,7 @@ export default function Home() {
               <Link key={crypto.id} href={`/${crypto.id}`}>
                 <Button
                   variant="ghost"
+                  title={`${crypto.name} ($${crypto.symbol.toUpperCase()})`}
                   className="flex gap-2 justify-start items-center px-3 py-2 w-full text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   {crypto.image ? (
@@ -180,7 +180,7 @@ export default function Home() {
                   ) : (
                     <span>{crypto.icon || crypto.symbol}</span>
                   )}
-                  <span>{crypto.name}</span>
+                  <span className="truncate">{crypto.name}</span>
                 </Button>
               </Link>
             ))}

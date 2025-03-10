@@ -102,7 +102,7 @@ export const TOP_CRYPTOCURRENCIES: CryptoCurrency[] = [
     "symbol": "wbtc",
     "name": "Wrapped Bitcoin",
     "icon": "₿ᵂ",
-    
+
     "image": "/7598/large/wrapped_bitcoin_wbtc.png?1696507857"
   },
   {
