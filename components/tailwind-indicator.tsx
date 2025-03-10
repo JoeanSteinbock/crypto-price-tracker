@@ -1,5 +1,10 @@
 export function TailwindIndicator() {
   if (process.env.NODE_ENV === "production") return null
+  
+  // 检查是否在localhost环境
+  const isLocalhost = typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+  
+  if (!isLocalhost) return null
 
   return (
     <div className="flex fixed bottom-1 left-1 z-50 justify-center items-center p-3 w-6 h-6 font-mono text-xs text-white bg-gray-800 rounded-full">
@@ -11,4 +16,4 @@ export function TailwindIndicator() {
       <div className="hidden 2xl:block">2xl</div>
     </div>
   )
-} 
+}
