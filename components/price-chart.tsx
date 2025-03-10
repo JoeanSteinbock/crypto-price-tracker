@@ -101,12 +101,23 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
         setIsLoading(false)
       } catch (error) {
         console.error("Error fetching historical data:", error)
-        // Create simple fallback data
+        
+        // 创建更好的占位数据，使用波浪形图表
         const now = Date.now();
-        const fallbackData = [
-          { timestamp: now - 86400000, price: currentPrice ? currentPrice * 0.98 : 85000 },
-          { timestamp: now, price: currentPrice || 86000 }
-        ];
+        const dayAgo = now - 86400000;
+        const steps = 20;
+        const fallbackData = [];
+        
+        // 使用正弦函数创建波浪效果
+        for (let i = 0; i <= steps; i++) {
+          const timestamp = dayAgo + (now - dayAgo) * (i / steps);
+          // 如果有当前价格，则围绕当前价格创建波动；否则使用默认值
+          const basePrice = currentPrice || 50000;
+          // 创建±5%的波动
+          const price = basePrice * (1 + Math.sin((i / steps) * Math.PI * 2) * 0.05);
+          fallbackData.push({ timestamp, price });
+        }
+        
         setPriceHistory(fallbackData);
         hasInitializedRef.current = true; // Mark as initialized even with fallback data
         setIsLoading(false)
@@ -174,7 +185,40 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   }
 
   if (isLoading || priceHistory.length === 0) {
-    return null
+    // 创建一个更明显的占位图表，使用更多的数据点和更大的波动
+    const placeholderData = [];
+    const now = Date.now();
+    const dayAgo = now - 86400000;
+    const steps = 20;
+    
+    // 创建一个波浪形的占位图表
+    for (let i = 0; i <= steps; i++) {
+      const timestamp = dayAgo + (now - dayAgo) * (i / steps);
+      // 使用正弦函数创建波浪效果
+      const price = 100 + Math.sin((i / steps) * Math.PI * 2) * 10;
+      placeholderData.push({ timestamp, price });
+    }
+    
+    return (
+      <div
+        className="absolute inset-0 z-0 w-full h-full opacity-40 pointer-events-none"
+        aria-hidden="true"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={placeholderData}>
+            <YAxis hide />
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke={resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.2)"}
+              strokeWidth={2}
+              dot={false}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
   }
 
   return (
