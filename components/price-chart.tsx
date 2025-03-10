@@ -101,23 +101,32 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
         setIsLoading(false)
       } catch (error) {
         console.error("Error fetching historical data:", error)
-        
-        // 创建更好的占位数据，使用波浪形图表
+
+        // 创建上升趋势的占位数据
         const now = Date.now();
         const dayAgo = now - 86400000;
         const steps = 20;
         const fallbackData = [];
-        
-        // 使用正弦函数创建波浪效果
+
+        // 基础价格，如果有当前价格则使用，否则使用默认值
+        const basePrice = currentPrice || 50000;
+
+        // 创建一个上升趋势的图表，带有一些小波动
         for (let i = 0; i <= steps; i++) {
           const timestamp = dayAgo + (now - dayAgo) * (i / steps);
-          // 如果有当前价格，则围绕当前价格创建波动；否则使用默认值
-          const basePrice = currentPrice || 50000;
-          // 创建±5%的波动
-          const price = basePrice * (1 + Math.sin((i / steps) * Math.PI * 2) * 0.05);
+
+          // 主要趋势是上升的（从基础价格的80%上升到120%）
+          const trendComponent = basePrice * (0.8 + (i / steps) * 0.4);
+
+          // 添加一些小波动，使图表看起来更自然
+          const volatilityComponent = basePrice * 0.05 * Math.sin((i / steps) * Math.PI * 3);
+
+          // 最终价格是趋势加上波动
+          const price = trendComponent + volatilityComponent;
+
           fallbackData.push({ timestamp, price });
         }
-        
+
         setPriceHistory(fallbackData);
         hasInitializedRef.current = true; // Mark as initialized even with fallback data
         setIsLoading(false)
@@ -179,26 +188,52 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
 
   // Determine chart colors based on theme
   const getChartColor = () => {
+
+    // const isUptrend = priceHistory.length > 1 &&
+    //   priceHistory[priceHistory.length - 1].price > priceHistory[0].price;
+
+    // if (isUptrend) {
+    //   return resolvedTheme === "dark"
+    //     ? "rgba(0, 255, 0, 0.3)" // 暗色模式下的绿色
+    //     : "rgba(0, 200, 0, 0.2)" // 亮色模式下的绿色
+    // } else {
+    //   return resolvedTheme === "dark"
+    //     ? "rgba(255, 0, 0, 0.3)" // 暗色模式下的红色
+    //     : "rgba(200, 0, 0, 0.2)" // 亮色模式下的红色
+    // }
+
     return resolvedTheme === "dark"
       ? "rgba(255, 255, 255, 0.3)" // Dark mode
       : "rgba(0, 0, 0, 0.2)" // Light mode
   }
 
   if (isLoading || priceHistory.length === 0) {
-    // 创建一个更明显的占位图表，使用更多的数据点和更大的波动
+    // 创建一个上升趋势的占位图表
     const placeholderData = [];
     const now = Date.now();
     const dayAgo = now - 86400000;
     const steps = 20;
-    
-    // 创建一个波浪形的占位图表
+
+    // 基础价格，如果有当前价格则使用，否则使用默认值
+    const basePrice = currentPrice || 100;
+
+    // 创建一个上升趋势的图表，带有一些小波动
     for (let i = 0; i <= steps; i++) {
       const timestamp = dayAgo + (now - dayAgo) * (i / steps);
-      // 使用正弦函数创建波浪效果
-      const price = 100 + Math.sin((i / steps) * Math.PI * 2) * 10;
+
+      // 主要趋势是上升的（从基础价格的80%上升到120%）
+      const trendComponent = basePrice * (0.8 + (i / steps) * 0.4);
+
+      // 添加一些小波动，使图表看起来更自然
+      // 使用正弦函数创建波动，但波动幅度较小
+      const volatilityComponent = basePrice * 0.05 * Math.sin((i / steps) * Math.PI * 3);
+
+      // 最终价格是趋势加上波动
+      const price = trendComponent + volatilityComponent;
+
       placeholderData.push({ timestamp, price });
     }
-    
+
     return (
       <div
         className="absolute inset-0 z-0 w-full h-full opacity-40 pointer-events-none"
@@ -206,11 +241,14 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={placeholderData}>
-            <YAxis hide />
+            <YAxis
+              domain={[(dataMin: number) => dataMin * 0.95, (dataMax: number) => dataMax * 1.05]}
+              hide
+            />
             <Line
               type="monotone"
               dataKey="price"
-              stroke={resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.2)"}
+              stroke={resolvedTheme === "dark" ? "rgba(0, 255, 0, 0.3)" : "rgba(0, 200, 0, 0.2)"}
               strokeWidth={2}
               dot={false}
               isAnimationActive={false}
