@@ -136,7 +136,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="overflow-hidden relative min-h-screen bg-white dark:bg-black">
+    <main className="relative min-h-screen bg-white dark:bg-black">
       {/* 使用新的 Hero 组件 */}
       <Hero />
 

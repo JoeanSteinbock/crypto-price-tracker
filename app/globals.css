@@ -55,10 +55,6 @@
   body {
     min-height: -webkit-fill-available;
     overflow-x: hidden;
-    /* 在移动端时有足够空间就隐藏滚动条 */
-    @media (max-height: 800px) {
-      overflow-y: hidden;
-    }
   }
 }
 
