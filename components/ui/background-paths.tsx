@@ -273,24 +273,43 @@ export function BackgroundPaths({
                                 key={wordIndex}
                                 className="inline-block mr-4 last:mr-0"
                             >
-                                {word.split("").map((letter, letterIndex) => (
-                                    <motion.span
-                                        key={`${wordIndex}-${letterIndex}`}
-                                        initial={{ y: 100, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{
-                                            delay:
-                                                wordIndex * 0.1 +
-                                                letterIndex * 0.03,
-                                            type: "spring",
-                                            stiffness: 150,
-                                            damping: 25,
-                                        }}
-                                        className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-300"
-                                    >
-                                        {letter}
-                                    </motion.span>
-                                ))}
+                                {word.split("").map((letter, letterIndex) => {
+                                    // 检查是否是点号
+                                    const isDot = letter === "." && wordIndex === words.length - 1;
+                                    
+                                    return (
+                                        <motion.span
+                                            key={`${wordIndex}-${letterIndex}`}
+                                            initial={{ y: 100, opacity: 0 }}
+                                            animate={{ 
+                                                y: 0, 
+                                                opacity: isDot 
+                                                    ? [1, 0.3, 1] // 点号的不透明度动画
+                                                    : 1 
+                                            }}
+                                            transition={{
+                                                delay:
+                                                    wordIndex * 0.1 +
+                                                    letterIndex * 0.03,
+                                                type: "spring",
+                                                stiffness: 150,
+                                                damping: 25,
+                                                opacity: isDot ? {
+                                                    duration: 1.5,
+                                                    repeat: Infinity,
+                                                    ease: "easeInOut"
+                                                } : undefined
+                                            }}
+                                            className={`inline-block text-transparent bg-clip-text ${
+                                                isDot 
+                                                    ? "bg-red-500 dark:bg-red-400" // 点号使用红色
+                                                    : "bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-300"
+                                            }`}
+                                        >
+                                            {letter}
+                                        </motion.span>
+                                    );
+                                })}
                             </span>
                         ))}
                     </h1>
@@ -303,7 +322,20 @@ export function BackgroundPaths({
                     >
                         {subtitleWords.map((word, index) => {
                             if (word === "Live") {
-                                return <span key={index} className="font-semibold text-blue-500"> {word} </span>;
+                                return (
+                                    <motion.span 
+                                        key={index} 
+                                        className="font-semibold text-blue-500"
+                                        animate={{ opacity: [1, 0.7, 1] }}
+                                        transition={{
+                                            duration: 1.8,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }}
+                                    > 
+                                        {word} 
+                                    </motion.span>
+                                );
                             }
                             if (word === "Broadcasting") {
                                 return <span key={index} className="font-semibold text-green-500"> {word} </span>;
