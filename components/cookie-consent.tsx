@@ -3,11 +3,25 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 export function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false)
+  const searchParams = useSearchParams()
+  const presentationMode = searchParams.get('pm') === '1' || searchParams.get('pm') === 'true'
 
   useEffect(() => {
+    // If in presentation mode, automatically grant consent
+    if (presentationMode) {
+      localStorage.setItem('cookie-consent', 'true')
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('consent', 'update', {
+          'analytics_storage': 'granted'
+        })
+      }
+      return
+    }
+
     // Check if user has already consented to cookies
     const hasConsented = localStorage.getItem('cookie-consent')
     if (!hasConsented) {
@@ -20,7 +34,7 @@ export function CookieConsent() {
         'analytics_storage': 'granted'
       })
     }
-  }, [])
+  }, [presentationMode])
 
   const acceptCookies = () => {
     localStorage.setItem('cookie-consent', 'true')
@@ -46,7 +60,7 @@ export function CookieConsent() {
     }
   }
 
-  if (!showConsent) return null
+  if (!showConsent || presentationMode) return null
 
   return (
     <div className="fixed right-0 bottom-0 left-0 z-50 p-4 bg-gray-100 shadow-lg dark:bg-gray-800">

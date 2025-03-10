@@ -201,7 +201,6 @@ body.presentation-mode {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    padding-top: 6vh;
   }
 
   /* 价格区域容器 */
