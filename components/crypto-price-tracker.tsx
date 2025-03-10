@@ -25,9 +25,6 @@ type PriceData = {
   last_updated: string
 }
 
-// Available cryptocurrencies
-
-
 // Default cryptocurrencies
 const DEFAULT_CRYPTOS: CryptoCurrency[] = DEFAULT_CRYPTOCURRENCIES;
 
@@ -56,7 +53,7 @@ export default function CryptoPriceTracker({
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency>(() => {
     // 简化的初始化逻辑，只从默认列表中查找
     const cryptoFromDefault = TOP_CRYPTOCURRENCIES.find((c) => c.id === initialCrypto);
-    return cryptoFromDefault || DEFAULT_CRYPTOS[0];
+    return cryptoFromDefault || DEFAULT_CRYPTOCURRENCIES[0];
   });
 
   // 初始化占位价格数据
@@ -80,7 +77,7 @@ export default function CryptoPriceTracker({
   const [searchResults, setSearchResults] = useState<CryptoCurrency[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [favoriteCoins, setFavoriteCoins] = useState<CryptoCurrency[]>([])
-  const [availableCryptos, setAvailableCryptos] = useState<CryptoCurrency[]>(DEFAULT_CRYPTOS)
+  const [availableCryptos, setAvailableCryptos] = useState<CryptoCurrency[]>(DEFAULT_CRYPTOCURRENCIES)
 
   // 在状态初始化后，添加一个 useEffect 来处理初始加密货币
   useEffect(() => {
@@ -89,7 +86,7 @@ export default function CryptoPriceTracker({
       logDebug(`Finding initial crypto from URL param: ${initialCrypto}`);
 
       // 首先在默认列表中查找
-      const cryptoFromDefault = DEFAULT_CRYPTOS.find((c) => c.id === initialCrypto);
+      const cryptoFromDefault = DEFAULT_CRYPTOCURRENCIES.find((c) => c.id === initialCrypto);
       if (cryptoFromDefault) {
         logDebug(`Found matching crypto in defaults: ${cryptoFromDefault.name}`);
         setSelectedCrypto(cryptoFromDefault);
@@ -132,8 +129,8 @@ export default function CryptoPriceTracker({
       try {
         const parsed = JSON.parse(savedFavorites)
         setFavoriteCoins(parsed)
-        setAvailableCryptos([...DEFAULT_CRYPTOS, ...parsed.filter(
-          (coin: CryptoCurrency) => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
+        setAvailableCryptos([...DEFAULT_CRYPTOCURRENCIES, ...parsed.filter(
+          (coin: CryptoCurrency) => !DEFAULT_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
         )])
       } catch (e) {
         console.error("Failed to parse saved favorites:", e)
@@ -189,19 +186,40 @@ export default function CryptoPriceTracker({
   // Add to favorites
   const addToFavorites = (crypto: CryptoCurrency) => {
     if (!favoriteCoins.some(coin => coin.id === crypto.id)) {
+      logDebug(`Adding ${crypto.name} to favorites`);
       const updatedFavorites = [...favoriteCoins, crypto]
       setFavoriteCoins(updatedFavorites)
       setAvailableCryptos([...DEFAULT_CRYPTOS, ...updatedFavorites.filter(
         coin => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
       )])
+      
+      // 保存到本地存储
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFavorites))
+      
+      // 发送Google Analytics事件
+      try {
+        if (typeof window !== 'undefined' && 'gtag' in window) {
+          // @ts-ignore
+          window.gtag('event', 'add_to_favorites', {
+            'crypto_id': crypto.id,
+            'crypto_name': crypto.name
+          });
+        }
+      } catch (e) {
+        console.error('Failed to send analytics event:', e);
+      }
     }
   }
 
   // Remove from favorites
   const removeFromFavorites = (cryptoId: string) => {
+    logDebug(`Removing ${cryptoId} from favorites`);
     const updatedFavorites = favoriteCoins.filter(coin => coin.id !== cryptoId)
     setFavoriteCoins(updatedFavorites)
-
+    
+    // Save to local storage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFavorites))
+    
     // If the currently selected crypto is removed, switch to bitcoin
     if (selectedCrypto.id === cryptoId) {
       handleCryptoChange(DEFAULT_CRYPTOS[0])
@@ -211,6 +229,18 @@ export default function CryptoPriceTracker({
     setAvailableCryptos([...DEFAULT_CRYPTOS, ...updatedFavorites.filter(
       coin => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
     )])
+    
+    // 发送Google Analytics事件
+    try {
+      if (typeof window !== 'undefined' && 'gtag' in window) {
+        // @ts-ignore
+        window.gtag('event', 'remove_from_favorites', {
+          'crypto_id': cryptoId
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send analytics event:', e);
+    }
   }
 
   // Handle search input change
@@ -445,6 +475,20 @@ export default function CryptoPriceTracker({
       
       // 触发加密货币变化事件，用于同步音频状态
       window.dispatchEvent(new Event('crypto-changed'));
+      
+      // 发送Google Analytics事件
+      try {
+        if (typeof window !== 'undefined' && 'gtag' in window) {
+          // @ts-ignore - 我们已经检查了gtag是否存在
+          window.gtag('event', 'select_crypto', {
+            'crypto_id': crypto.id,
+            'crypto_name': crypto.name,
+            'crypto_symbol': crypto.symbol
+          });
+        }
+      } catch (e) {
+        console.error('Failed to send analytics event:', e);
+      }
     } else {
       logDebug(`User selected same crypto: ${crypto.id}, no change needed`);
     }
@@ -500,7 +544,7 @@ export default function CryptoPriceTracker({
 
       // 如果这个加密货币不在收藏夹中，添加它
       if (!favoriteCoins.some(coin => coin.id === newCrypto.id) &&
-        !DEFAULT_CRYPTOS.some(coin => coin.id === newCrypto.id)) {
+        !DEFAULT_CRYPTOCURRENCIES.some(coin => coin.id === newCrypto.id)) {
         logDebug(`Adding ${newCrypto.id} to favorites`);
         addToFavorites(newCrypto)
       }
@@ -778,7 +822,7 @@ export default function CryptoPriceTracker({
                   {/* 热门加密货币 - 改为英文 */}
                   <div className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Popular Cryptocurrencies</div>
                   <div className="grid grid-cols-3 gap-1 p-2">
-                    {DEFAULT_CRYPTOS.map((crypto) => (
+                    {DEFAULT_CRYPTOCURRENCIES.map((crypto) => (
                       <div
                         key={crypto.id}
                         onClick={() => handleCryptoChange(crypto)}
@@ -811,11 +855,11 @@ export default function CryptoPriceTracker({
                   </div>
 
                   {/* 收藏的加密货币 - 改为英文 */}
-                  {favoriteCoins.length > 0 && !DEFAULT_CRYPTOS.some(coin => favoriteCoins.map(f => f.id).includes(coin.id)) && (
+                  {favoriteCoins.length > 0 && !DEFAULT_CRYPTOCURRENCIES.some(coin => favoriteCoins.map(f => f.id).includes(coin.id)) && (
                     <>
                       <div className="px-2 py-1 mt-2 text-xs text-gray-500 border-t border-gray-200 dark:text-gray-400 dark:border-gray-700">My Favorites</div>
                       {favoriteCoins
-                        .filter(coin => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id))
+                        .filter(coin => !DEFAULT_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id))
                         .map((crypto) => (
                           <DropdownMenuItem
                             key={crypto.id}
