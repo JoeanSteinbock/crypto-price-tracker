@@ -24,13 +24,20 @@ function AnalyticsTracking() {
 
   // 页面浏览跟踪
   useEffect(() => {
-    if (pathname && window.gtag) {
+    if (pathname && typeof window !== 'undefined' && window.gtag) {
+      // 检查用户是否已同意Cookie
+      const hasConsented = localStorage.getItem('cookie-consent')
+      if (hasConsented !== 'true') return // 如果用户未同意，不发送事件
+      
       // 构建完整URL
       const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
       
       // 发送页面浏览事件
-      window.gtag('config', gaId, {
+      window.gtag('event', 'page_view', {
+        page_title: document.title,
+        page_location: window.location.href,
         page_path: url,
+        send_to: gaId
       })
 
       // 如果是加密货币详情页，发送加密货币浏览事件
@@ -70,9 +77,26 @@ export default function GoogleAnalytics() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${gaId}', {
-              page_path: window.location.pathname,
+            
+            // 默认拒绝分析存储，直到用户同意
+            gtag('consent', 'default', {
+              'analytics_storage': 'denied'
             });
+            
+            // 配置GA
+            gtag('config', '${gaId}', {
+              page_location: window.location.href,
+              page_path: window.location.pathname,
+              send_page_view: false
+            });
+            
+            // 检查用户是否已同意Cookie
+            const hasConsented = localStorage.getItem('cookie-consent');
+            if (hasConsented === 'true') {
+              gtag('consent', 'update', {
+                'analytics_storage': 'granted'
+              });
+            }
           `,
         }}
       />

@@ -8,6 +8,7 @@ import { TailwindIndicator } from "@/components/tailwind-indicator"
 import { Header } from "@/components/header"
 import { ClientFooter } from "@/components/client-footer"
 import GoogleAnalytics from "@/components/google-analytics"
+import { CookieConsent } from "@/components/cookie-consent"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,14 +21,13 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
-  description:
-    "Track cryptocurrency prices in real-time with CryptoTick.live - Perfect for live streaming, broadcasting, and display on large screens. Features live charts, price alerts, and market data.",
   keywords:
     "cryptocurrency, bitcoin price, ethereum price, crypto tracker, live crypto prices, crypto broadcast, crypto streaming, digital signage, crypto display, large screen crypto, crypto TV display, crypto dashboard, BTC, ETH, SOL, market cap, trading volume, crypto presentation",
+  authors: [{ name: "CryptoTick Team" }],
+  creator: "CryptoTick.live",
+  publisher: "CryptoTick.live",
   generator: "CryptoTick.live",
   manifest: "/manifest.json",
-  authors: [{ name: "CryptoTick.live" }],
   openGraph: {
     title: "CryptoTick.live - Real-time Cryptocurrency Price Tracker",
     description: "Track cryptocurrency prices in real-time with CryptoTick.live",
@@ -91,6 +91,7 @@ export default function RootLayout({
             <ClientFooter />
           </div>
           <TailwindIndicator />
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>

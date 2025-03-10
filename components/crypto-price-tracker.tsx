@@ -198,8 +198,9 @@ export default function CryptoPriceTracker({
       
       // 发送Google Analytics事件
       try {
-        if (typeof window !== 'undefined' && 'gtag' in window) {
-          // @ts-ignore
+        // 检查用户是否已同意Cookie
+        const hasConsented = localStorage.getItem('cookie-consent')
+        if (hasConsented === 'true' && typeof window !== 'undefined' && 'gtag' in window) {
           window.gtag('event', 'add_to_favorites', {
             'crypto_id': crypto.id,
             'crypto_name': crypto.name
@@ -232,8 +233,9 @@ export default function CryptoPriceTracker({
     
     // 发送Google Analytics事件
     try {
-      if (typeof window !== 'undefined' && 'gtag' in window) {
-        // @ts-ignore
+      // 检查用户是否已同意Cookie
+      const hasConsented = localStorage.getItem('cookie-consent')
+      if (hasConsented === 'true' && typeof window !== 'undefined' && 'gtag' in window) {
         window.gtag('event', 'remove_from_favorites', {
           'crypto_id': cryptoId
         });
@@ -478,7 +480,9 @@ export default function CryptoPriceTracker({
       
       // 发送Google Analytics事件
       try {
-        if (typeof window !== 'undefined' && 'gtag' in window) {
+        // 检查用户是否已同意Cookie
+        const hasConsented = localStorage.getItem('cookie-consent')
+        if (hasConsented === 'true' && typeof window !== 'undefined' && 'gtag' in window) {
           // @ts-ignore - 我们已经检查了gtag是否存在
           window.gtag('event', 'select_crypto', {
             'crypto_id': crypto.id,
