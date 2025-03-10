@@ -20,6 +20,14 @@ export function Footer() {
           <div className="flex flex-col gap-4 items-center sm:flex-row">
             <div className="flex gap-3">
               <Link 
+                href="https://github.com/JoeanSteinbock/crypto-price-tracker" 
+                target="_blank"
+                className="text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                aria-label="GitHub Repository"
+              >
+                <Github className="w-5 h-5" />
+              </Link>
+              <Link 
                 href="https://www.youtube.com/@CryptoTickLive" 
                 target="_blank"
                 className="text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
