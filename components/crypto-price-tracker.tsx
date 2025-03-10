@@ -625,7 +625,7 @@ export default function CryptoPriceTracker({
           </div>
 
           {/* 头部导航栏 */}
-          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container mobileLandscape:flex-row-reverse mobileLandscape:mb-4">
+          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container mobileLandscape:flex-row-reverse mobileLandscape:mb-4 mobileLandscape:mt-[-60px]">
             <div className="flex gap-2 items-center logo-container">
               <Link href="/">
                 <div className="flex gap-2 items-center cursor-pointer">
