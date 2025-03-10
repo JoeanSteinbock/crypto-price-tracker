@@ -601,7 +601,7 @@ export default function CryptoPriceTracker({
         if (container) {
           const innerContainer = container.querySelector('div');
           if (innerContainer) {
-            innerContainer.classList.add('force-presentation-mode');
+            innerContainer.classList.add('force-presentation-mode', 'dark:bg-black');
           }
         }
       }

@@ -314,7 +314,7 @@ body.presentation-mode {
 }
 
 :is([data-theme="dark"]) .demo-container {
-  background: #000;
+  background: #000 !important;
 }
 
 /* 演示模式演示的特殊样式 */
@@ -353,8 +353,8 @@ body.presentation-mode {
 
 /* 强制演示模式样式 */
 .force-presentation-mode {
-  background: #fff !important;
-  color: black !important;
+  background: #fff;
+  color: black;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -365,8 +365,8 @@ body.presentation-mode {
 }
 
 :is([data-theme="dark"]) .force-presentation-mode {
-  background: #000 !important;
-  color: white !important;
+  background: #000;
+  color: white;
 }
 
 /* 强制演示模式中的内部容器 */

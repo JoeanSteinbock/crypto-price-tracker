@@ -8,18 +8,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface ThemeToggleProps {
   className?: string
+  showBorder?: boolean
 }
 
-export function ThemeToggle({ className }: ThemeToggleProps) {
+export function ThemeToggle({ className, showBorder = true }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant={showBorder ? "outline" : "ghost"}
           size="icon"
-          className={`bg-transparent border-gray-700 hover:bg-gray-800 dark:border-gray-600 ${className}`}
+          className={`bg-transparent ${showBorder ? "border-gray-700 hover:bg-gray-800 dark:border-gray-600" : ""} ${className}`}
         >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

@@ -28,7 +28,7 @@ function DemoCryptoPriceTracker({ isMobile }: { isMobile: boolean }) {
       // 找到内部的主容器
       const innerContainer = container.querySelector('div');
       if (innerContainer) {
-        innerContainer.classList.add('force-presentation-mode');
+        innerContainer.classList.add('force-presentation-mode', 'dark:bg-black');
         
         // 找到内部的 min-h-[100dvh] 容器并移除最小高度
         const minHeightContainer = innerContainer.querySelector('div');
@@ -189,7 +189,7 @@ export default function Home() {
       </section>
 
       {/* Demo Section with Bitcoin Tracker in Presentation Mode */}
-      <section id="demo-section" className="relative py-16 bg-gray-900 dark:bg-black">
+      <section id="demo-section" className="relative py-16 bg-gray-600 dark:bg-black">
         <div className="container px-4 mx-auto">
           <div className="mb-8 text-center">
             <h2 className="mb-3 text-3xl font-bold text-white">
@@ -203,9 +203,9 @@ export default function Home() {
           
           <div className={`transition-all duration-1000 transform ${showDemo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
             <div className="p-2 mx-auto max-w-4xl bg-white rounded-xl border border-white shadow-2xl backdrop-blur-md dark:bg-gray-800/50 dark:border-gray-700/50">
-              <div className="overflow-hidden relative rounded-lg demo-container" style={{ height: '500px', isolation: 'isolate' }}>
+              <div className="overflow-hidden relative rounded-lg demo-container dark:bg-black" style={{ height: '500px', isolation: 'isolate' }}>
                 {showDemo && (
-                  <div className="absolute inset-0 z-10 pointer-events-none presentation-container">
+                  <div className="absolute inset-0 z-10 pointer-events-none presentation-container dark:bg-black">
                     <DemoCryptoPriceTracker isMobile={isMobile} />
                   </div>
                 )}

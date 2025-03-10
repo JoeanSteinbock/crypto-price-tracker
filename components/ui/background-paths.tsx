@@ -53,21 +53,23 @@ function FloatingPaths({ position }: { position: number }) {
         // 使用斐波那契数列创建更加和谐的段数
         const segments = 13 + Math.floor(i * PHI); 
         
-        // 使用不同的颜色透明度，创建深度感
-        const opacity = 0.05 + (i / 20);
+        // 增加不透明度，使线条在浅色模式下更加明显
+        const opacity = 0.15 + (i / 15); // 提高基础不透明度
         
-        // 使用不同的颜色，创建渐变效果
+        // 调整颜色，使其在浅色模式下更加明显
         const hue = position > 0 
             ? 210 + (i * 3) // 蓝色系
             : 140 - (i * 3); // 绿色系
             
+        // 增加颜色饱和度和亮度，使线条在浅色模式下更加明显
+        const saturation = 85; // 增加饱和度
+        const lightness = position > 0 ? 45 : 40; // 降低亮度，使颜色更深
+            
         return {
             id: i,
             d: generatePriceChartPath(width, height, segments, volatility, position * (i % 2 === 0 ? 1 : -1)),
-            color: position > 0 
-                ? `hsla(${hue}, 80%, 50%, ${opacity})` // 蓝色系
-                : `hsla(${hue}, 80%, 50%, ${opacity})`, // 绿色系
-            width: 1 + i * 0.4,
+            color: `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`,
+            width: 1.5 + i * 0.5, // 增加线条宽度
             // 使用斐波那契数列创建更加和谐的动画时间
             duration: 15 + (i * PHI * 2),
             delay: i * PHI,
@@ -93,7 +95,7 @@ function FloatingPaths({ position }: { position: number }) {
                         initial={{ pathLength: 0, opacity: 0 }}
                         animate={{
                             pathLength: 1,
-                            opacity: 0.8,
+                            opacity: 0.9, // 增加不透明度
                             pathOffset: [0, 1],
                         }}
                         transition={{
@@ -129,12 +131,12 @@ function FloatingPaths({ position }: { position: number }) {
                                 key={`moving-dot-${pathIndex}-${i}`}
                                 cx={100 + (i * 400)}
                                 cy={300 + (Math.sin(i * 0.8) * 50 * position)}
-                                r={3 + (pathIndex * 0.5)}
-                                fill={path.color.replace('0.05', '0.9')}
+                                r={4 + (pathIndex * 0.5)} // 增加点的大小
+                                fill={path.color.replace(/[\d.]+\)$/, '0.9)')} // 增加点的不透明度
                                 filter={`blur(${pathIndex * 0.3}px)`}
                                 initial={{ opacity: 0 }}
                                 animate={{ 
-                                    opacity: [0, 0.8, 0.8, 0],
+                                    opacity: [0, 0.9, 0.9, 0], // 增加不透明度
                                     x: [0, 1200],
                                     y: [
                                         300 + (Math.sin(0) * 50 * position),
@@ -179,20 +181,25 @@ function FloatingPaths({ position }: { position: number }) {
                     const x = 50 + (i * 100);
                     const y = 300 + (Math.sin(i * 0.5) * 80 * position);
                     
+                    // 调整颜色，使其在浅色模式下更加明显
+                    const hue = position > 0 
+                        ? 210 + (i * 5) // 蓝色系
+                        : 140 - (i * 5); // 绿色系
+                    
                     return (
                         <motion.circle
                             key={`pulse-dot-${i}`}
                             cx={x}
                             cy={y}
-                            r={2 + (i % 3)}
+                            r={3 + (i % 3)} // 增加点的大小
                             fill={position > 0 
-                                ? `hsla(${210 + (i * 5)}, 80%, 50%, 0.8)` 
-                                : `hsla(${140 - (i * 5)}, 80%, 50%, 0.8)`
+                                ? `hsla(${hue}, 85%, 45%, 0.9)` // 增加不透明度和饱和度，降低亮度
+                                : `hsla(${hue}, 85%, 40%, 0.9)` // 增加不透明度和饱和度，降低亮度
                             }
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ 
                                 scale: [0, 1 + (i % 3) * 0.5, 0],
-                                opacity: [0, 0.8, 0],
+                                opacity: [0, 0.9, 0], // 增加不透明度
                             }}
                             transition={{
                                 duration: duration,
@@ -212,8 +219,8 @@ function FloatingPaths({ position }: { position: number }) {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 4, duration: 1 }}
                     >
-                        <rect x="1000" y="150" width="80" height="30" rx="4" fill="rgba(59,130,246,0.2)" />
-                        <text x="1040" y="170" textAnchor="middle" fill="rgba(59,130,246,0.8)" fontSize="14" fontFamily="monospace">+2.4%</text>
+                        <rect x="1000" y="150" width="80" height="30" rx="4" fill="rgba(59,130,246,0.3)" /> {/* 增加不透明度 */}
+                        <text x="1040" y="170" textAnchor="middle" fill="rgba(59,130,246,0.9)" fontSize="14" fontFamily="monospace">+2.4%</text> {/* 增加不透明度 */}
                     </motion.g>
                 )}
                 
@@ -223,8 +230,8 @@ function FloatingPaths({ position }: { position: number }) {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 4, duration: 1 }}
                     >
-                        <rect x="900" y="350" width="80" height="30" rx="4" fill="rgba(34,197,94,0.2)" />
-                        <text x="940" y="370" textAnchor="middle" fill="rgba(34,197,94,0.8)" fontSize="14" fontFamily="monospace">+1.8%</text>
+                        <rect x="900" y="350" width="80" height="30" rx="4" fill="rgba(34,197,94,0.3)" /> {/* 增加不透明度 */}
+                        <text x="940" y="370" textAnchor="middle" fill="rgba(34,197,94,0.9)" fontSize="14" fontFamily="monospace">+1.8%</text> {/* 增加不透明度 */}
                     </motion.g>
                 )}
             </svg>
@@ -247,20 +254,20 @@ export function BackgroundPaths({
     const subtitleWords = subtitle.split(" ");
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-900">
-            <div className="absolute inset-0 opacity-30 dark:opacity-40">
+        <div className="flex overflow-hidden relative justify-center items-center w-full min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-900">
+            <div className="absolute inset-0 opacity-40 dark:opacity-40"> {/* 增加浅色模式下的不透明度 */}
                 <FloatingPaths position={1} />
                 <FloatingPaths position={-1} />
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 md:px-6 text-center">
+            <div className="container relative z-10 px-4 mx-auto text-center md:px-6">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 2 }}
-                    className="max-w-4xl mx-auto"
+                    className="mx-auto max-w-4xl"
                 >
-                    <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold mb-8 tracking-tighter">
+                    <h1 className="mb-8 text-5xl font-bold tracking-tighter sm:text-7xl md:text-8xl">
                         {words.map((word, wordIndex) => (
                             <span
                                 key={wordIndex}
@@ -279,9 +286,7 @@ export function BackgroundPaths({
                                             stiffness: 150,
                                             damping: 25,
                                         }}
-                                        className="inline-block text-transparent bg-clip-text 
-                                        bg-gradient-to-r from-blue-600 to-green-500 
-                                        dark:from-blue-400 dark:to-green-300"
+                                        className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-300"
                                     >
                                         {letter}
                                     </motion.span>
@@ -294,14 +299,14 @@ export function BackgroundPaths({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 1.5, duration: 1 }}
-                        className="text-xl md:text-2xl mb-12 text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
+                        className="mx-auto mb-12 max-w-3xl text-xl text-gray-600 md:text-2xl dark:text-gray-300"
                     >
                         {subtitleWords.map((word, index) => {
                             if (word === "Live") {
-                                return <span key={index} className="text-blue-500 font-semibold"> {word} </span>;
+                                return <span key={index} className="font-semibold text-blue-500"> {word} </span>;
                             }
                             if (word === "Broadcasting") {
-                                return <span key={index} className="text-green-500 font-semibold"> {word} </span>;
+                                return <span key={index} className="font-semibold text-green-500"> {word} </span>;
                             }
                             return <span key={index}> {word} </span>;
                         })}
@@ -313,9 +318,7 @@ export function BackgroundPaths({
                         transition={{ delay: 2, duration: 0.8 }}
                     >
                         <div
-                            className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 
-                            dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg 
-                            overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+                            className="inline-block overflow-hidden relative p-px bg-gradient-to-b rounded-2xl shadow-lg backdrop-blur-lg transition-shadow duration-300 group from-black/10 to-white/10 dark:from-white/10 dark:to-black/10 hover:shadow-xl"
                         >
                             <Button
                                 variant="ghost"
@@ -327,7 +330,7 @@ export function BackgroundPaths({
                                 asChild
                             >
                                 <Link href={buttonLink}>
-                                    <span className="opacity-90 group-hover:opacity-100 transition-opacity">
+                                    <span className="opacity-90 transition-opacity group-hover:opacity-100">
                                         {buttonText}
                                     </span>
                                     <span
@@ -349,7 +352,7 @@ export function BackgroundPaths({
                     >
                         <button 
                             onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="flex mx-auto gap-2 items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                            className="flex gap-2 items-center mx-auto text-sm text-gray-500 transition-colors dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         >
                             See It In Action
                             <motion.span
