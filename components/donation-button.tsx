@@ -146,6 +146,7 @@ export function DonationButton({ className = "", hideTextOnMobile = true, modalM
           className={`flex fixed inset-0 justify-center items-center min-w-[480px] mt-[${modalMarginTop}px] z-[9999]`} 
           onClick={() => setShowModal(false)}
         >
+          <div className="mt-[-200px] hidden"></div>
           <div 
             className="overflow-hidden relative m-4 w-full max-w-md bg-white rounded-xl shadow-2xl dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
