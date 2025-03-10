@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { ArrowDown, ArrowUp, ChevronDown, Search, Heart, Coffee, X, Copy, Check, ChevronRight } from "lucide-react"
+import { ArrowDown, ArrowUp, ChevronDown, Search, Heart, Coffee, X, Copy, Check, ChevronRight, Clock } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { ToolbarMenu } from "@/components/toolbar-menu"
 import { PriceChart } from "@/components/price-chart"
@@ -78,6 +78,7 @@ export default function CryptoPriceTracker({
   const [isSearching, setIsSearching] = useState(false)
   const [favoriteCoins, setFavoriteCoins] = useState<CryptoCurrency[]>([])
   const [availableCryptos, setAvailableCryptos] = useState<CryptoCurrency[]>(DEFAULT_CRYPTOCURRENCIES)
+  const [currentTime, setCurrentTime] = useState<string>("");
 
   // 在状态初始化后，添加一个 useEffect 来处理初始加密货币
   useEffect(() => {
@@ -711,9 +712,48 @@ export default function CryptoPriceTracker({
     };
   }, [presentationMode]);
 
+  // 添加时间戳更新逻辑
+  useEffect(() => {
+    if (presentationMode) {
+      // 更新时间的函数
+      const updateTime = () => {
+        const now = new Date();
+        // 添加8小时得到 UTC+8 时间
+        const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        
+        // 格式化日期和时间
+        const year = utc8Time.getUTCFullYear();
+        const month = (utc8Time.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = utc8Time.getUTCDate().toString().padStart(2, '0');
+        const hours = utc8Time.getUTCHours().toString().padStart(2, '0');
+        const minutes = utc8Time.getUTCMinutes().toString().padStart(2, '0');
+        const seconds = utc8Time.getUTCSeconds().toString().padStart(2, '0');
+        
+        setCurrentTime(`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`);
+      };
+      
+      // 立即更新一次
+      updateTime();
+      
+      // 每秒更新一次
+      const timeInterval = setInterval(updateTime, 1000);
+      
+      return () => clearInterval(timeInterval);
+    }
+  }, [presentationMode]);
+
   return (
     <div className={`relative ${!presentationMode ? 'min-h-screen w-[100vw]' : ''}`}>
       <div className="flex flex-col justify-center items-center p-4 min-h-[100dvh] lg:w-[100vw] text-gray-900 bg-white transition-colors duration-200 dark:bg-black dark:text-white mobileLandscape:pt-0 mobileLandscape:min-w-[100dvw]">
+        {/* 添加 UTC+8 时间戳组件 */}
+        {presentationMode && (
+          <div className="flex fixed top-4 right-4 z-50 gap-2 items-center px-3 py-2 text-white rounded-md backdrop-blur-sm bg-black/70 dark:bg-white/20">
+            <Clock className="w-4 h-4" />
+            <span>{currentTime}</span>
+            <span className="text-xs opacity-70">(UTC+8)</span>
+          </div>
+        )}
+        
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
           <div className="absolute inset-0 z-20 pointer-events-none">
