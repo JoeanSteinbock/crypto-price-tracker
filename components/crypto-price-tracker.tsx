@@ -74,6 +74,8 @@ export default function CryptoPriceTracker({
   const [displayPrice, setDisplayPrice] = useState<number | null>(0)
   const [previousPrice, setPreviousPrice] = useState<number | null>(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<CryptoCurrency[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -449,12 +451,17 @@ export default function CryptoPriceTracker({
   }
 
   // 从 API 获取加密货币信息
-  const fetchCryptoInfo = async (cryptoId: string, retryCount = 0) => {
-    logDebug(`Fetching crypto info for ${cryptoId}, attempt ${retryCount + 1}`);
+  const fetchCryptoInfo = async (cryptoId: string, attemptCount = 0) => {
+    logDebug(`Fetching crypto info for ${cryptoId}, attempt ${attemptCount + 1}`);
 
     try {
       // 显示加载状态
       setIsLoading(true)
+      // 如果是重试，设置重试状态
+      if (attemptCount > 0) {
+        setIsRetrying(true)
+        setRetryCount(attemptCount)
+      }
 
       const response = await fetch(
         `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
@@ -469,6 +476,10 @@ export default function CryptoPriceTracker({
         }
         throw new Error(`Failed to fetch crypto info: ${response.status}`)
       }
+
+      // 成功获取数据，重置重试状态
+      setIsRetrying(false)
+      setRetryCount(0)
 
       const data = await response.json()
       logDebug(`Successfully fetched data for ${cryptoId}:`, data.id);
@@ -501,22 +512,28 @@ export default function CryptoPriceTracker({
       console.error(`Error fetching crypto info for ${cryptoId}:`, error)
 
       // 如果是 429 错误，并且重试次数小于最大重试次数，则延迟后重试
-      if (error.message && error.message.includes("429") && retryCount < 3) {
-        logDebug(`Rate limit hit, retrying in ${(retryCount + 1) * 2} seconds... (Attempt ${retryCount + 1}/3)`);
+      if (error.message && error.message.includes("429") && attemptCount < 3) {
+        logDebug(`Rate limit hit, retrying in ${(attemptCount + 1) * 2} seconds... (Attempt ${attemptCount + 1}/3)`);
 
-        // 显示重试状态（但不改变当前选择的加密货币）
+        // 显示重试状态
         setIsLoading(true)
+        setIsRetrying(true)
+        setRetryCount(attemptCount + 1)
 
         // 延迟时间随重试次数增加
-        const delayTime = (retryCount + 1) * 2000 // 2秒, 4秒, 6秒
+        const delayTime = (attemptCount + 1) * 2000 // 2秒, 4秒, 6秒
 
         setTimeout(() => {
-          fetchCryptoInfo(cryptoId, retryCount + 1)
+          fetchCryptoInfo(cryptoId, attemptCount + 1)
         }, delayTime)
 
         return
       }
 
+      // 重置重试状态
+      setIsRetrying(false)
+      setRetryCount(0)
+      
       // 设置占位数据，而不是显示空白
       logDebug(`Failed to fetch info for ${cryptoId} after retries, showing placeholder data`);
       
@@ -656,7 +673,7 @@ export default function CryptoPriceTracker({
           </div>
 
           {/* 头部导航栏 */}
-          <div className="flex relative z-10 justify-between items-center mb-4 sm:mb-8 controls-container mobileLandscape:flex-row-reverse mobileLandscape:mb-4 mobileLandscape:mt-[-60px]">
+          <div className="flex relative z-30 justify-between items-center mb-4 sm:mb-8 controls-container mobileLandscape:flex-row-reverse mobileLandscape:mb-4 mobileLandscape:mt-[-60px]">
             <div className="flex gap-2 items-center logo-container">
               <Link href="/">
                 <div className="flex gap-2 items-center cursor-pointer">
@@ -681,7 +698,7 @@ export default function CryptoPriceTracker({
                 </div>
               </Link>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex z-30 gap-2 items-center">
               <ToolbarMenu />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -728,8 +745,16 @@ export default function CryptoPriceTracker({
                               handleCryptoChange(crypto);
                             }}
                           >
-                            {crypto.icon && (
+                            {crypto.image ? (
+                              <img 
+                                src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
+                                alt={crypto.name} 
+                                className="mr-2 w-5 h-5" 
+                              />
+                            ) : crypto.icon && crypto.icon.startsWith('http') ? (
                               <img src={crypto.icon} alt={crypto.name} className="mr-2 w-5 h-5" />
+                            ) : (
+                              <span className="mr-2">{crypto.icon || '🪙'}</span>
                             )}
                             <span>{crypto.name} ({crypto.symbol.toUpperCase()})</span>
                           </div>
@@ -760,9 +785,21 @@ export default function CryptoPriceTracker({
                         className="flex relative flex-col items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 group"
                         title={`${crypto.name} (${crypto.symbol.toUpperCase()})`}
                       >
-                        <span className="text-xl" style={{ color: crypto.color }}>
-                          {crypto.icon}
-                        </span>
+                        {crypto.image ? (
+                          <img 
+                            src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
+                            alt={crypto.name}
+                            className="w-8 h-8 rounded-full"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xl" style={{ color: crypto.color }}>
+                            {crypto.icon}
+                          </span>
+                        )}
                         <span className="mt-1 text-xs">{crypto.symbol.toUpperCase()}</span>
 
                         {/* 悬停时显示的完整名称 */}
@@ -788,7 +825,13 @@ export default function CryptoPriceTracker({
                               className="flex flex-1 items-center"
                               onClick={() => handleCryptoChange(crypto)}
                             >
-                              {crypto.icon && crypto.icon.startsWith('http') ? (
+                              {crypto.image ? (
+                                <img 
+                                  src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
+                                  alt={crypto.name} 
+                                  className="mr-2 w-5 h-5" 
+                                />
+                              ) : crypto.icon && crypto.icon.startsWith('http') ? (
                                 <img src={crypto.icon} alt={crypto.name} className="mr-2 w-5 h-5" />
                               ) : (
                                 <span className="mr-2">{crypto.icon || '🪙'}</span>
@@ -819,7 +862,20 @@ export default function CryptoPriceTracker({
           <div className="relative z-10 p-4 mb-4 sm:mb-8">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
-                {selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
+                {selectedCrypto.image ? (
+                  <img
+                    src={selectedCrypto.image.startsWith('http') ? selectedCrypto.image : `https://assets.coingecko.com/coins${selectedCrypto.image}`}
+                    alt={selectedCrypto.name}
+                    className="mr-4 w-12 h-12 rounded-full"
+                    onError={(e) => {
+                      // Fallback to emoji if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      // Show fallback element
+                      const fallback = document.getElementById(`crypto-icon-fallback-${selectedCrypto.id}`);
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : selectedCrypto.icon && selectedCrypto.icon.startsWith('http') ? (
                   <img
                     src={selectedCrypto.icon}
                     alt={selectedCrypto.name}
@@ -880,8 +936,9 @@ export default function CryptoPriceTracker({
                   <span className="ml-1 text-2xl sm:text-4xl">.{formatPrice(displayPrice).cents}</span>
                 </div>
               ) : (
-                <div className="flex items-baseline text-5xl font-bold text-gray-400 sm:text-7xl price-display">
-                  <span>--.--</span>
+                <div className="flex items-baseline text-5xl font-bold text-gray-300 animate-pulse dark:text-gray-700 sm:text-7xl price-display">
+                  <span>0</span>
+                  <span className="ml-1 text-2xl sm:text-4xl">.00000000</span>
                 </div>
               )}
             </div>
@@ -903,10 +960,11 @@ export default function CryptoPriceTracker({
               </div>
             ) : (
               <div className="flex items-center mt-2 mobileLandscape:hidden">
-                <div className="flex items-center text-gray-400">
-                  <span className="font-medium">--.--%</span>
+                <div className="flex items-center text-gray-300 animate-pulse dark:text-gray-700">
+                  <ArrowUp className="mr-1 w-4 h-4 opacity-50" />
+                  <span className="font-medium">0.00%</span>
                 </div>
-                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">24h</span>
+                <span className="ml-2 text-sm text-gray-300 dark:text-gray-700">24h</span>
               </div>
             )}
           </div>
@@ -920,7 +978,7 @@ export default function CryptoPriceTracker({
                   {!isLoading && priceData ? (
                     `$${priceData.low_24h.toLocaleString()} / $${priceData.high_24h.toLocaleString()}`
                   ) : (
-                    "$--.-- / $--.--"
+                    <span className="text-gray-300 animate-pulse dark:text-gray-700">$0.00 / $0.00</span>
                   )}
                 </div>
               </div>
@@ -931,7 +989,7 @@ export default function CryptoPriceTracker({
                   {!isLoading && priceData ? (
                     formatNumber(priceData.total_volume)
                   ) : (
-                    "$--,---,---"
+                    <span className="text-gray-300 animate-pulse dark:text-gray-700">$0</span>
                   )}
                 </div>
               </div>
@@ -942,7 +1000,7 @@ export default function CryptoPriceTracker({
                   {!isLoading && priceData ? (
                     formatNumber(priceData.market_cap)
                   ) : (
-                    "$--,---,---,---"
+                    <span className="text-gray-300 animate-pulse dark:text-gray-700">$0</span>
                   )}
                 </div>
               </div>
@@ -963,18 +1021,29 @@ export default function CryptoPriceTracker({
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center text-sm text-gray-400 sm:text-base mobileLandscape:text-base">
-                    --.--%
+                  <div className="flex items-center text-sm sm:text-base mobileLandscape:text-base">
+                    <span className="text-gray-300 animate-pulse dark:text-gray-700">0.00%</span>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Loading state */}
+          {/* Loading state - 绝对定位覆盖在主要内容区域上 */}
           {isLoading && (
-            <div className="flex relative z-10 justify-center items-center h-48 sm:h-64">
-              <div className="w-12 h-12 rounded-full border-t-2 border-b-2 border-gray-900 animate-spin dark:border-white"></div>
+            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-25">
+              <div className="flex flex-col justify-center items-center px-6 py-4 rounded-full shadow-sm backdrop-blur-sm pointer-events-auto bg-white/90 dark:bg-black/90">
+                <div className="w-8 h-8 rounded-full border-t-2 border-b-2 border-blue-500 animate-spin"></div>
+                {isRetrying && (
+                  <div className="mt-2 max-w-xs text-center">
+                    <div className="flex gap-1 justify-center items-center">
+                      <span className={`w-1.5 h-1.5 rounded-full ${retryCount >= 1 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`}></span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${retryCount >= 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`}></span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${retryCount >= 3 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`}></span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
