@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 
@@ -16,15 +16,11 @@ declare global {
   }
 }
 
-export default function GoogleAnalytics() {
+// 创建一个内部组件来使用useSearchParams
+function AnalyticsTracking() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-C0852F11XB"
-
-  // 如果没有设置GA ID，则不加载GA
-  if (!gaId) {
-    return null
-  }
 
   // 页面浏览跟踪
   useEffect(() => {
@@ -48,6 +44,17 @@ export default function GoogleAnalytics() {
     }
   }, [pathname, searchParams, gaId])
 
+  return null
+}
+
+export default function GoogleAnalytics() {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-C0852F11XB"
+
+  // 如果没有设置GA ID，则不加载GA
+  if (!gaId) {
+    return null
+  }
+
   return (
     <>
       {/* Global Site Tag (gtag.js) - Google Analytics */}
@@ -69,6 +76,9 @@ export default function GoogleAnalytics() {
           `,
         }}
       />
+      <Suspense fallback={null}>
+        <AnalyticsTracking />
+      </Suspense>
     </>
   )
 } 
