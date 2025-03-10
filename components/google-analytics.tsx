@@ -19,7 +19,7 @@ declare global {
 export default function GoogleAnalytics() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const gaId = process.env.NEXT_PUBLIC_GA_ID
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-C0852F11XB"
 
   // 如果没有设置GA ID，则不加载GA
   if (!gaId) {
