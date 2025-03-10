@@ -383,7 +383,7 @@ export function AudioController({ className }: AudioControllerProps) {
         <Button
           variant="outline"
           size="sm"
-          className={`flex flex-1 gap-2 items-center ${extraClass}`}
+          className={`flex flex-1 gap-2 items-center btn-toggle-audio ${extraClass}`}
           onClick={toggleAudio}
           title={isPlaying ? "Mute" : "Unmute"}
         >
@@ -396,7 +396,7 @@ export function AudioController({ className }: AudioControllerProps) {
           <Button
             variant={advancedAudio ? "default" : "outline"}
             size="sm"
-            className={`text-xs transition-all duration-300 ${advancedAudio ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : ''}`}
+            className={`text-xs transition-all duration-300 btn-toggle-advanced-audio ${advancedAudio ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : ''}`}
             onClick={toggleAdvancedAudio}
             title={advancedAudio ? "Switch to basic audio mode" : "Switch to enhanced audio mode with louder sounds"}
           >
