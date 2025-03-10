@@ -7,9 +7,10 @@ import { useIsMobile } from "../hooks/use-mobile";
 interface DonationButtonProps {
   className?: string;
   hideTextOnMobile?: boolean;
+  modalMarginTop?: number;
 }
 
-export function DonationButton({ className = "", hideTextOnMobile = true }: DonationButtonProps) {
+export function DonationButton({ className = "", hideTextOnMobile = true, modalMarginTop = 0 }: DonationButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string>("BTC_TAPROOT");
   const [copied, setCopied] = useState(false);
@@ -142,7 +143,7 @@ export function DonationButton({ className = "", hideTextOnMobile = true }: Dona
       
       {showModal && (
         <div 
-          className="min-w-[480px] bottom-[200px] fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
+          className={`flex fixed inset-0 justify-center items-center min-w-[480px] mt-[${modalMarginTop}px] z-[9999]`} 
           onClick={() => setShowModal(false)}
         >
           <div 

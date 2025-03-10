@@ -286,7 +286,7 @@ export default function Home() {
             
             <div className="flex justify-center items-center p-2 h-12 rounded-lg shadow-md backdrop-blur-sm bg-white/80 dark:bg-gray-800/80">
               <div className="flex gap-2 items-center px-8 py-0">
-                  <DonationButton className="!text-lg" hideTextOnMobile={false} />
+                  <DonationButton className="!text-lg" modalMarginTop={-200} hideTextOnMobile={false} />
               </div>
             </div>
           </div>
