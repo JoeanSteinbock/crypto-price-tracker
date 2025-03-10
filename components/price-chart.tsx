@@ -4,6 +4,30 @@ import { useEffect, useState, useRef } from "react"
 import { useTheme } from "next-themes"
 import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts"
 
+// 添加自定义的水流动画组件
+const FlowingGradient = ({ id, color }: { id: string, color: string }) => {
+  const [offset, setOffset] = useState(0);
+  
+  useEffect(() => {
+    const animate = () => {
+      // 减小增量，使动画变慢（从1减小到0.2）
+      setOffset((prevOffset) => (prevOffset + 0.2) % 100);
+      requestAnimationFrame(animate);
+    };
+    
+    const animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+  
+  return (
+    <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+      <stop offset={`${offset}%`} stopColor="rgba(255,255,255,0)" />
+      <stop offset={`${Math.min(offset + 10, 100)}%`} stopColor={color} />
+      <stop offset={`${Math.min(offset + 30, 100)}%`} stopColor="rgba(255,255,255,0)" />
+    </linearGradient>
+  );
+};
+
 type PricePoint = {
   timestamp: number
   price: number
@@ -241,10 +265,17 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={placeholderData}>
-            <YAxis
+            <defs>
+              <FlowingGradient 
+                id="placeholderFlowingGradient" 
+                color={resolvedTheme === "dark" ? "rgba(0, 255, 0, 0.3)" : "rgba(0, 200, 0, 0.2)"} 
+              />
+            </defs>
+            <YAxis 
               domain={[(dataMin: number) => dataMin * 0.95, (dataMax: number) => dataMax * 1.05]}
-              hide
+              hide 
             />
+            {/* 基础线 */}
             <Line
               type="monotone"
               dataKey="price"
@@ -252,6 +283,16 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
               strokeWidth={2}
               dot={false}
               isAnimationActive={false}
+            />
+            {/* 流动效果线 */}
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke="url(#placeholderFlowingGradient)"
+              strokeWidth={4}
+              dot={false}
+              isAnimationActive={false}
+              strokeLinecap="round"
             />
           </LineChart>
         </ResponsiveContainer>
@@ -267,10 +308,14 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={priceHistory}>
+          <defs>
+            <FlowingGradient id="flowingGradient" color={getChartColor()} />
+          </defs>
           <YAxis
             domain={[(dataMin: number) => dataMin * 0.999, (dataMax: number) => dataMax * 1.001]}
             hide
           />
+          {/* 基础线 */}
           <Line
             type="monotone"
             dataKey="price"
@@ -278,6 +323,16 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
             strokeWidth={3}
             dot={false}
             isAnimationActive={false}
+          />
+          {/* 流动效果线 */}
+          <Line
+            type="monotone"
+            dataKey="price"
+            stroke="url(#flowingGradient)"
+            strokeWidth={5}
+            dot={false}
+            isAnimationActive={false}
+            strokeLinecap="round"
           />
         </LineChart>
       </ResponsiveContainer>
