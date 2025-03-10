@@ -306,11 +306,15 @@ body.presentation-mode {
 .demo-container {
   overflow: hidden;
   position: relative;
-  background: #000;
+  background: #fff;
   pointer-events: none; /* 防止捕获鼠标事件 */
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+:is([data-theme="dark"]) .demo-container {
+  background: #000;
 }
 
 /* 演示模式演示的特殊样式 */
@@ -349,8 +353,8 @@ body.presentation-mode {
 
 /* 强制演示模式样式 */
 .force-presentation-mode {
-  background: #000 !important;
-  color: white !important;
+  background: #fff !important;
+  color: black !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -358,6 +362,11 @@ body.presentation-mode {
   padding-top: 0 !important; /* 减少顶部空间 */
   min-height: auto !important; /* 覆盖最小高度设置 */
   height: 100% !important;
+}
+
+:is([data-theme="dark"]) .force-presentation-mode {
+  background: #000 !important;
+  color: white !important;
 }
 
 /* 强制演示模式中的内部容器 */

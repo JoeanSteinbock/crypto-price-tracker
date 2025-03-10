@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { Heart, Coffee, X, Copy, Check, ChevronDown, ChevronRight } from "lucide-react"
+import { useIsMobile } from "../hooks/use-mobile";
 
 interface DonationButtonProps {
   className?: string;
+  hideTextOnMobile?: boolean;
 }
 
-export function DonationButton({ className = "" }: DonationButtonProps) {
+export function DonationButton({ className = "", hideTextOnMobile = true }: DonationButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string>("BTC_TAPROOT");
   const [copied, setCopied] = useState(false);
   const [showBtcMenu, setShowBtcMenu] = useState(false);
+  const isMobile = useIsMobile();
   
   // 从环境变量中读取捐赠地址
   const addresses: Record<string, string> = {
@@ -116,7 +119,7 @@ export function DonationButton({ className = "" }: DonationButtonProps) {
         title="Support this project"
       >
         <Coffee className="w-3.5 h-3.5" />
-        <span className="hidden xs:inline">Support</span>
+        <span className={`${isMobile && hideTextOnMobile ? "hidden xs:inline" : ""}`}>Support</span>
         <Heart className="w-3 h-3 text-red-500 opacity-70 heartbeat group-hover:opacity-100" />
       </button>
       

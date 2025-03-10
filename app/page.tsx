@@ -202,7 +202,7 @@ export default function Home() {
           </div>
           
           <div className={`transition-all duration-1000 transform ${showDemo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
-            <div className="p-2 mx-auto max-w-4xl rounded-xl border shadow-2xl backdrop-blur-md bg-gray-800/50 border-gray-700/50">
+            <div className="p-2 mx-auto max-w-4xl bg-white rounded-xl border border-white shadow-2xl backdrop-blur-md dark:bg-gray-800/50 dark:border-gray-700/50">
               <div className="overflow-hidden relative rounded-lg demo-container" style={{ height: '500px', isolation: 'isolate' }}>
                 {showDemo && (
                   <div className="absolute inset-0 z-10 pointer-events-none presentation-container">
@@ -286,7 +286,7 @@ export default function Home() {
             
             <div className="flex justify-center items-center p-2 h-12 rounded-lg shadow-md backdrop-blur-sm bg-white/80 dark:bg-gray-800/80">
               <div className="flex gap-2 items-center px-8 py-0">
-                  <DonationButton className="!text-lg" />
+                  <DonationButton className="!text-lg" hideTextOnMobile={false} />
               </div>
             </div>
           </div>
