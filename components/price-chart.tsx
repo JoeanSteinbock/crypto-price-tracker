@@ -189,6 +189,12 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   useEffect(() => {
     if (isLoading || currentPrice === null || priceHistory.length === 0) return
 
+    // 确保价格不为0（可能是API错误的结果）
+    if (currentPrice <= 0) {
+      logChartDebug('Skipping invalid price point:', currentPrice);
+      return;
+    }
+
     const now = Date.now();
     const newPoint = {
       timestamp: now,
@@ -196,28 +202,35 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
     }
 
     setPriceHistory((prevHistory) => {
-      // Create a copy of the history
+      // 创建历史记录的副本
       const updatedHistory = [...prevHistory];
 
-      // If the last point is very recent, just update it
+      // 如果最后一个点是最近的，只更新它
       const lastPoint = updatedHistory[updatedHistory.length - 1];
-      if (now - lastPoint.timestamp < 30000) { // Less than 30 seconds
+      
+      // 确保最后一个点的价格也是有效的
+      if (lastPoint && lastPoint.price <= 0) {
+        logChartDebug('Removing invalid last point:', lastPoint);
+        updatedHistory.pop();
+      }
+
+      if (lastPoint && now - lastPoint.timestamp < 30000) { // 少于30秒
         updatedHistory[updatedHistory.length - 1] = {
           ...lastPoint,
           price: currentPrice
         };
       } else {
-        // Add the new point
+        // 添加新的点
         updatedHistory.push(newPoint);
 
-        // If we have too many points, remove some older ones
+        // 如果我们有太多点，移除一些旧的
         if (updatedHistory.length > maxDataPoints) {
-          // Remove every other point from the first half of the data
+          // 从数据的前半部分每隔一个点删除
           const midpoint = Math.floor(updatedHistory.length / 2);
           const firstHalf = updatedHistory.slice(0, midpoint);
           const secondHalf = updatedHistory.slice(midpoint);
 
-          // Keep every other point from first half
+          // 保留前半部分的每隔一个点
           const reducedFirstHalf = firstHalf.filter((_, i) => i % 2 === 0);
 
           return [...reducedFirstHalf, ...secondHalf];
