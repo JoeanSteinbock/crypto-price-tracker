@@ -89,7 +89,7 @@ function DesktopToolbar() {
     <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="p-0 w-9 h-9 rounded-full shadow-sm backdrop-blur bg-white/90">
+          <Button variant="ghost" size="icon" className="p-0 w-9 h-9 rounded-full border shadow-sm backdrop-blur bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800">
             <Settings className="w-5 h-5" />
           </Button>
         </DropdownMenuTrigger>
