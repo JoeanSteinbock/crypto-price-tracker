@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { useTheme } from "next-themes"
 import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts"
+import { getApiService } from "@/lib/api-service"
 
 // 添加自定义的水流动画组件
 const FlowingGradient = ({ id, color }: { id: string, color: string }) => {
@@ -38,6 +39,13 @@ interface PriceChartProps {
   cryptoId: string
 }
 
+// Helper function to log debug messages
+const logChartDebug = (message: string, data?: any) => {
+  if (typeof window !== 'undefined' && (window as any).DEBUG_MODE) {
+    console.log(`[CHART DEBUG] ${message}`, data || '');
+  }
+};
+
 export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   const [priceHistory, setPriceHistory] = useState<PricePoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -45,6 +53,8 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const maxDataPoints = 100 // Maximum number of data points to show
   const hasInitializedRef = useRef(false) // Track if we've already fetched initial data
+  // Create API service instance
+  const apiService = useRef(getApiService(logChartDebug))
 
   // Initialize with historical data - only once per crypto
   useEffect(() => {
@@ -56,23 +66,16 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
     const fetchHistoricalData = async () => {
       setIsLoading(true)
       try {
-        // Fetch the last 24 hours of price data
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart?vs_currency=usd&days=1`,
-          { cache: 'no-store' } // Disable caching to get fresh data
-        )
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch historical data")
+        logChartDebug(`Fetching historical data for ${cryptoId}`);
+        
+        // 使用API服务获取历史数据
+        const formattedData = await apiService.current.fetchHistoricalData(cryptoId, 1);
+        
+        if (!formattedData || formattedData.length === 0) {
+          logChartDebug('No historical data received');
+          setIsLoading(false);
+          return;
         }
-
-        const data = await response.json()
-
-        // Format the data for the chart
-        const formattedData = data.prices.map((item: [number, number]) => ({
-          timestamp: item[0],
-          price: item[1],
-        }));
 
         // Ensure data is sorted by timestamp
         formattedData.sort((a: PricePoint, b: PricePoint) => a.timestamp - b.timestamp);

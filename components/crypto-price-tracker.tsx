@@ -1,39 +1,30 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { ArrowDown, ArrowUp, ChevronDown, Search, Heart, Coffee, X, Copy, Check, ChevronRight, Clock } from "lucide-react"
-import { useRouter, usePathname } from "next/navigation"
+import React, { useState, useEffect, useCallback, useRef } from "react"
+import { ArrowDown, ArrowUp, ChevronDown, Search, Clock } from "lucide-react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { ToolbarMenu } from "@/components/toolbar-menu"
 import { PriceChart } from "@/components/price-chart"
 import Image from "next/image"
-
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { TOP_CRYPTOCURRENCIES, DEFAULT_CRYPTOCURRENCIES, CryptoCurrency } from "../data/cryptocurrencies"
 import { AnimatedGradientText } from "./animated-logo-text"
 import { DonationButton } from "@/components/donation-button"
 import Link from "next/link"
+import { getApiService, PriceData, ApiKeyType } from '@/lib/api-service'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 
-type PriceData = {
-  current_price: number
-  price_change_percentage_24h: number
-  high_24h: number
-  low_24h: number
-  total_volume: number
-  market_cap: number
-  last_updated: string
-}
-
-// Default cryptocurrencies
-const DEFAULT_CRYPTOS: CryptoCurrency[] = DEFAULT_CRYPTOCURRENCIES;
 
 // 更新所有的本地存储键名
 const STORAGE_KEY = "cryptotick-favorites"
+const API_KEY_STORAGE = "cryptotick-api-key"
 
 // 在组件的顶部添加一个日志函数
 const logDebug = (message: string, data?: any) => {
-  console.debug(`[CryptoTick] ${message}`, data || '');
+  if (typeof window !== 'undefined' && (window as any).DEBUG_MODE) {
+    console.log(`[DEBUG] ${message}`, data || '');
+  }
 };
 
 export default function CryptoPriceTracker({ 
@@ -45,9 +36,16 @@ export default function CryptoPriceTracker({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const apiIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const microIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastFetchTimeRef = useRef<number>(0)
+  
+  // 创建API服务实例
+  const apiService = useRef(getApiService(logDebug));
+  // 存储从URL参数获取的API密钥和类型
+  const urlApiKeyRef = useRef<string | null>(null);
+  const urlApiKeyTypeRef = useRef<ApiKeyType>(null);
 
   // 先初始化状态变量
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency>(() => {
@@ -79,6 +77,81 @@ export default function CryptoPriceTracker({
   const [favoriteCoins, setFavoriteCoins] = useState<CryptoCurrency[]>([])
   const [availableCryptos, setAvailableCryptos] = useState<CryptoCurrency[]>(DEFAULT_CRYPTOCURRENCIES)
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [animatingPrice, setAnimatingPrice] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 从URL参数中获取API密钥和类型
+  useEffect(() => {
+    // 检查URL参数中是否有API密钥和类型
+    const apiKeyFromUrl = searchParams.get('api_key');
+    const apiTypeFromUrl = searchParams.get('api_type') as ApiKeyType;
+    
+    if (apiKeyFromUrl) {
+      // 保存URL中的API密钥，用于后续API调用
+      urlApiKeyRef.current = apiKeyFromUrl;
+      logDebug(`Found API key in URL parameters: ${apiKeyFromUrl.substring(0, 4)}...`);
+      
+      // 如果URL中也提供了类型，则使用它
+      if (apiTypeFromUrl && (apiTypeFromUrl === 'demo' || apiTypeFromUrl === 'pro')) {
+        urlApiKeyTypeRef.current = apiTypeFromUrl;
+        logDebug(`Found API key type in URL: ${apiTypeFromUrl}`);
+      } else {
+        // 如果URL中没有类型但有密钥，默认为pro，除非密钥前缀为demo_
+        urlApiKeyTypeRef.current = apiKeyFromUrl.startsWith('demo_') ? 'demo' : 'pro';
+        logDebug(`No API key type in URL, defaulting to: ${urlApiKeyTypeRef.current}`);
+      }
+      
+      // 直接设置API密钥到服务
+      apiService.current.setApiKey(apiKeyFromUrl, urlApiKeyTypeRef.current);
+      
+      // 触发自定义事件以通知其他组件
+      const event = new CustomEvent(API_KEY_STORAGE, {
+        detail: {
+          apiKey: apiKeyFromUrl,
+          apiKeyType: urlApiKeyTypeRef.current
+        }
+      });
+      window.dispatchEvent(event);
+      
+      // 可以考虑添加一个提示，询问用户是否要保存此URL中的API密钥到本地存储
+    }
+  }, [searchParams]);
+
+  // 监听 API 密钥变化事件
+  useEffect(() => {
+    const handleApiKeyChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const newApiKey = customEvent.detail?.apiKey || "";
+      const newApiKeyType = customEvent.detail?.apiKeyType || null;
+      
+      logDebug(`API key changed via event: ${newApiKey ? "New key set" : "Key cleared"}, Type: ${newApiKeyType || "none"}`);
+      
+      // 更新API服务
+      apiService.current.setApiKey(newApiKey, newApiKeyType as ApiKeyType);
+      
+      // 立即获取数据以测试新密钥
+      fetchPriceData();
+    };
+    
+    // 添加事件监听器
+    window.addEventListener(API_KEY_STORAGE, handleApiKeyChange);
+    
+    // 清理函数
+    return () => {
+      window.removeEventListener(API_KEY_STORAGE, handleApiKeyChange);
+      
+      // 确保组件卸载时清除所有间隔
+      if (apiIntervalRef.current) {
+        clearInterval(apiIntervalRef.current);
+        apiIntervalRef.current = null;
+      }
+      
+      if (microIntervalRef.current) {
+        clearInterval(microIntervalRef.current);
+        microIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   // 在状态初始化后，添加一个 useEffect 来处理初始加密货币
   useEffect(() => {
@@ -87,7 +160,7 @@ export default function CryptoPriceTracker({
       logDebug(`Finding initial crypto from URL param: ${initialCrypto}`);
 
       // 首先在默认列表中查找
-      const cryptoFromDefault = DEFAULT_CRYPTOCURRENCIES.find((c) => c.id === initialCrypto);
+      const cryptoFromDefault = TOP_CRYPTOCURRENCIES.find((c) => c.id === initialCrypto);
       if (cryptoFromDefault) {
         logDebug(`Found matching crypto in defaults: ${cryptoFromDefault.name}`);
         setSelectedCrypto(cryptoFromDefault);
@@ -102,51 +175,39 @@ export default function CryptoPriceTracker({
         return;
       }
 
-      // 如果都找不到，创建一个临时的加密货币对象
-      if (initialCrypto !== selectedCrypto.id) {
-        logDebug(`Creating temporary crypto object for: ${initialCrypto}`);
-
-        // 设置临时对象
-        setSelectedCrypto({
-          id: initialCrypto,
-          symbol: "...",
-          name: "Loading...",
-          icon: "",
-          color: "#808080"
-        });
-
-        // 尝试从 API 获取详细信息
-        fetchCryptoInfo(initialCrypto);
-      }
+      // 如果在收藏夹和默认列表中都找不到，则使用API获取
+      logDebug(`Crypto not found in defaults or favorites, fetching info for: ${initialCrypto}`);
+      fetchCryptoInfo(initialCrypto);
     };
 
-    findAndSetInitialCrypto();
-  }, [initialCrypto, favoriteCoins]); // 依赖项包括 initialCrypto 和 favoriteCoins
+    // 如果有初始加密货币参数，尝试找到并设置它
+    if (initialCrypto) {
+      findAndSetInitialCrypto();
+    }
+  }, [initialCrypto, favoriteCoins]);
 
-  // Load favorite cryptocurrencies from local storage
+  // 从本地存储加载收藏列表
   useEffect(() => {
-    const savedFavorites = localStorage.getItem(STORAGE_KEY)
-    if (savedFavorites) {
-      try {
-        const parsed = JSON.parse(savedFavorites)
-        setFavoriteCoins(parsed)
-        setAvailableCryptos([...DEFAULT_CRYPTOCURRENCIES, ...parsed.filter(
-          (coin: CryptoCurrency) => !DEFAULT_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
-        )])
-      } catch (e) {
-        console.error("Failed to parse saved favorites:", e)
+    try {
+      const savedFavorites = localStorage.getItem(STORAGE_KEY);
+      if (savedFavorites) {
+        const parsedFavorites = JSON.parse(savedFavorites);
+        setFavoriteCoins(parsedFavorites);
+
+        // 将收藏列表添加到可用加密货币列表中
+        setAvailableCryptos([
+          ...TOP_CRYPTOCURRENCIES,
+          ...parsedFavorites.filter(
+            (coin: CryptoCurrency) => !TOP_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
+          )
+        ]);
       }
+    } catch (e) {
+      console.error("Failed to load favorites:", e);
     }
-  }, [])
+  }, []);
 
-  // Save favorite cryptocurrencies to local storage
-  useEffect(() => {
-    if (favoriteCoins && favoriteCoins.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteCoins))
-    }
-  }, [favoriteCoins])
-
-  // Search for cryptocurrencies
+  // 搜索加密货币
   const searchCryptos = async (term: string) => {
     if (!term || term.length < 2) {
       setSearchResults([])
@@ -156,26 +217,8 @@ export default function CryptoPriceTracker({
     setIsSearching(true)
 
     try {
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(term)}`
-      )
-
-      if (!response.ok) {
-        throw new Error("Search failed")
-      }
-
-      const data = await response.json()
-
-      // Convert search results to our CryptoCurrency type
-      const formattedResults = data.coins.slice(0, 10).map((coin: any) => ({
-        id: coin.id,
-        symbol: coin.symbol.toUpperCase(),
-        name: coin.name,
-        icon: coin.thumb || "",
-        color: "#808080" // Default color
-      }))
-
-      setSearchResults(formattedResults)
+      const results = await apiService.current.searchCryptos(term);
+      setSearchResults(results);
     } catch (error) {
       console.error("Error searching cryptos:", error)
       setSearchResults([])
@@ -190,8 +233,8 @@ export default function CryptoPriceTracker({
       logDebug(`Adding ${crypto.name} to favorites`);
       const updatedFavorites = [...favoriteCoins, crypto]
       setFavoriteCoins(updatedFavorites)
-      setAvailableCryptos([...DEFAULT_CRYPTOS, ...updatedFavorites.filter(
-        coin => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
+      setAvailableCryptos([...TOP_CRYPTOCURRENCIES, ...updatedFavorites.filter(
+        coin => !TOP_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
       )])
       
       // 保存到本地存储
@@ -224,12 +267,12 @@ export default function CryptoPriceTracker({
     
     // If the currently selected crypto is removed, switch to bitcoin
     if (selectedCrypto.id === cryptoId) {
-      handleCryptoChange(DEFAULT_CRYPTOS[0])
+      handleCryptoChange(DEFAULT_CRYPTOCURRENCIES[0])
     }
 
     // Update available cryptocurrencies list
-    setAvailableCryptos([...DEFAULT_CRYPTOS, ...updatedFavorites.filter(
-      coin => !DEFAULT_CRYPTOS.some(defaultCoin => defaultCoin.id === coin.id)
+    setAvailableCryptos([...TOP_CRYPTOCURRENCIES, ...updatedFavorites.filter(
+      coin => !TOP_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
     )])
     
     // 发送Google Analytics事件
@@ -267,15 +310,9 @@ export default function CryptoPriceTracker({
     logDebug(`URL update check - Current path: ${pathname}, Selected crypto: ${selectedCrypto.id}`);
     logDebug(`Loading state: ${isLoading}, Has price data: ${priceData !== null}`);
 
-    // 只有在以下情况下才更新 URL：
-    // 1. 当前路径不是空（不是首页）
-    // 2. 当前路径与选定的加密货币不匹配
-    // 3. 不是在初始加载过程中
-    if (currentCryptoId &&
-      currentCryptoId !== selectedCrypto.id &&
-      !isLoading &&
-      priceData !== null) {
-      logDebug(`Updating URL to match selected crypto: ${selectedCrypto.id}`);
+    // 只有当路径与当前加密货币不匹配，且已经加载了价格数据时才更新URL
+    if (currentCryptoId !== selectedCrypto.id && !isLoading && priceData !== null) {
+      logDebug(`Updating URL to: /${selectedCrypto.id}`);
       router.push(`/${selectedCrypto.id}`, { scroll: false })
     }
   }, [selectedCrypto.id, router, pathname, isLoading, priceData])
@@ -285,54 +322,31 @@ export default function CryptoPriceTracker({
     logDebug(`Fetching price data for ${selectedCrypto.id}, attempt ${retryCount + 1}`);
 
     try {
-      // Prevent too frequent API calls
-      const now = Date.now()
+      // Prevent too frequent API calls for the same crypto
+      const now = Date.now();
       if (now - lastFetchTimeRef.current < 5000 && !isLoading) {
         logDebug(`Skipping API call, too frequent (${now - lastFetchTimeRef.current}ms since last call)`);
-        return
+        return;
       }
 
-      lastFetchTimeRef.current = now
+      lastFetchTimeRef.current = now;
 
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/${selectedCrypto.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`,
-      )
-
-      logDebug(`Price data API response status: ${response.status}`);
-
-      if (!response.ok) {
-        // 检查是否是 429 错误
-        if (response.status === 429) {
-          throw new Error("Rate limit exceeded (429)")
+      // 使用API服务获取价格数据
+      const newPriceData = await apiService.current.fetchPriceData(selectedCrypto.id);
+      
+      if (!newPriceData) {
+        if (retryCount < 3) {
+          // 如果是速率限制问题，延迟后重试
+          setTimeout(() => {
+            fetchPriceData(retryCount + 1);
+          }, (retryCount + 1) * 2000); // 2秒, 4秒, 6秒
         }
-        throw new Error(`Failed to fetch data: ${response.status}`)
+        return;
       }
-
-      const data = await response.json()
 
       // Save previous price for animation
       if (priceData) {
-        setPreviousPrice(priceData.current_price)
-      }
-
-      // Extract icon URL if available
-      const iconUrl = data.image?.large || data.image?.small || null;
-      if (iconUrl && selectedCrypto.icon !== iconUrl) {
-        // Update the crypto object with the real icon URL
-        setSelectedCrypto(prev => ({
-          ...prev,
-          icon: iconUrl
-        }));
-      }
-
-      const newPriceData = {
-        current_price: data.market_data.current_price.usd,
-        price_change_percentage_24h: data.market_data.price_change_percentage_24h,
-        high_24h: data.market_data.high_24h.usd,
-        low_24h: data.market_data.low_24h.usd,
-        total_volume: data.market_data.total_volume.usd,
-        market_cap: data.market_data.market_cap.usd,
-        last_updated: data.market_data.last_updated,
+        setPreviousPrice(priceData.current_price);
       }
 
       // 添加显著价格变化的阈值检测
@@ -352,55 +366,65 @@ export default function CryptoPriceTracker({
         }
       }
 
-      setPriceData(newPriceData)
-      setDisplayPrice(newPriceData.current_price)
-      setPreviousPrice(newPriceData.current_price)
-      setIsLoading(false)
+      setPriceData(newPriceData);
+      setDisplayPrice(newPriceData.current_price);
+      setPreviousPrice(newPriceData.current_price);
+      setIsLoading(false);
+      setIsRetrying(false);
+      setError(null);
 
       logDebug(`Price data updated: ${newPriceData.current_price}`);
     } catch (error: any) {
-      console.error("Error fetching price data:", error)
-
-      // 如果是 429 错误，并且重试次数小于最大重试次数，则延迟后重试
-      if (error.message && error.message.includes("429") && retryCount < 3) {
-        logDebug(`Rate limit hit, retrying price data in ${(retryCount + 1) * 2} seconds... (Attempt ${retryCount + 1}/3)`);
+      console.error("Error fetching price data:", error);
+      
+      // 如果重试次数小于最大重试次数，则延迟后重试
+      if (retryCount < 3) {
+        setIsRetrying(true);
+        setRetryCount(retryCount + 1);
+        
+        logDebug(`Retrying price data in ${(retryCount + 1) * 2} seconds... (Attempt ${retryCount + 1}/3)`);
 
         // 延迟时间随重试次数增加
-        const delayTime = (retryCount + 1) * 2000 // 2秒, 4秒, 6秒
+        const delayTime = (retryCount + 1) * 2000; // 2秒, 4秒, 6秒
 
         setTimeout(() => {
-          fetchPriceData(retryCount + 1)
-        }, delayTime)
+          fetchPriceData(retryCount + 1);
+        }, delayTime);
 
-        return
+        return;
       }
 
-      logDebug(`Failed to fetch price data after retries`);
-      setIsLoading(false)
+      setError(`Failed to fetch data: ${error.message}`);
+      setIsLoading(false);
+      setIsRetrying(false);
     }
-  }, [selectedCrypto.id, isLoading, priceData, previousPrice])
+  }, [selectedCrypto.id, isLoading, priceData, previousPrice]);
 
-  // Set up API polling
+  // 根据 API 密钥设置轮询间隔
   useEffect(() => {
-    // Clear existing intervals when crypto changes
+    // 获取轮询间隔时间
+    const pollInterval = apiService.current.getPollingInterval();
+    
+    // 清除现有轮询
     if (apiIntervalRef.current) {
-      clearInterval(apiIntervalRef.current)
+      clearInterval(apiIntervalRef.current);
     }
-
-    // Initial fetch
-    fetchPriceData()
-
-    // Set up polling interval (every 8 seconds)
-    apiIntervalRef.current = setInterval(fetchPriceData, 8000)
-
-    // Clean up interval on unmount or when crypto changes
+    
+    // 立即获取初始数据
+    fetchPriceData();
+    
+    // 设置新轮询
+    apiIntervalRef.current = setInterval(fetchPriceData, pollInterval);
+    
+    logDebug(`API polling set up with interval: ${pollInterval}ms`);
+    
+    // 清理函数
     return () => {
       if (apiIntervalRef.current) {
-        clearInterval(apiIntervalRef.current)
-        apiIntervalRef.current = null
+        clearInterval(apiIntervalRef.current);
       }
-    }
-  }, [selectedCrypto.id, fetchPriceData])
+    };
+  }, [selectedCrypto.id, fetchPriceData]);
 
   // Create micro-fluctuations
   const createMicroFluctuation = useCallback(() => {
@@ -461,34 +485,43 @@ export default function CryptoPriceTracker({
     }
   }, [priceData, isLoading, createMicroFluctuation])
 
-  // Handle crypto selection change
-  const handleCryptoChange = (crypto: CryptoCurrency) => {
-    // 只有当选择了不同的加密货币时才更新
-    if (crypto.id !== selectedCrypto.id) {
-      logDebug(`User selected new crypto: ${crypto.id} (${crypto.name})`);
-      setSelectedCrypto(crypto)
-      setIsLoading(true)
-      setPriceData(null)
-      setDisplayPrice(null)
-      setPreviousPrice(null)
-
-      // 更新 URL 以反映所选加密货币
-      logDebug(`Pushing new URL: /${crypto.id}`);
-      router.push(`/${crypto.id}`, { scroll: false })
+  // Handle micro-animation of price changes
+  useEffect(() => {
+    if (priceData && previousPrice !== null && previousPrice !== priceData.current_price) {
+      // Animate price
+      setAnimatingPrice(true)
       
-      // 触发加密货币变化事件，用于同步音频状态
-      window.dispatchEvent(new Event('crypto-changed'));
+      // Use a timeout to end animation
+      const timeout = setTimeout(() => {
+        setAnimatingPrice(false)
+      }, 2000)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [priceData, previousPrice])
+
+  // Handle user changing crypto
+  const handleCryptoChange = (crypto: CryptoCurrency) => {
+    if (crypto.id !== selectedCrypto.id) {
+      logDebug(`User selected new crypto: ${crypto.id}`);
+      
+      // Reset states
+      setIsLoading(true)
+      setError(null)
+      setRetryCount(0)
+      setIsRetrying(false)
+      
+      // Update selected crypto
+      setSelectedCrypto(crypto)
       
       // 发送Google Analytics事件
       try {
         // 检查用户是否已同意Cookie
         const hasConsented = localStorage.getItem('cookie-consent')
         if (hasConsented === 'true' && typeof window !== 'undefined' && 'gtag' in window) {
-          // @ts-ignore - 我们已经检查了gtag是否存在
-          window.gtag('event', 'select_crypto', {
+          window.gtag('event', 'change_crypto', {
             'crypto_id': crypto.id,
-            'crypto_name': crypto.name,
-            'crypto_symbol': crypto.symbol
+            'crypto_name': crypto.name
           });
         }
       } catch (e) {
@@ -505,116 +538,56 @@ export default function CryptoPriceTracker({
 
     try {
       // 显示加载状态
-      setIsLoading(true)
+      setIsLoading(true);
       // 如果是重试，设置重试状态
       if (attemptCount > 0) {
-        setIsRetrying(true)
-        setRetryCount(attemptCount)
+        setIsRetrying(true);
+        setRetryCount(attemptCount);
       }
 
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
-      )
-
-      logDebug(`API response status for ${cryptoId}: ${response.status}`);
-
-      if (!response.ok) {
-        // 检查是否是 429 错误
-        if (response.status === 429) {
-          throw new Error("Rate limit exceeded (429)")
+      // 使用API服务获取加密货币信息
+      const cryptoInfo = await apiService.current.fetchCryptoInfo(cryptoId);
+      
+      if (!cryptoInfo) {
+        if (attemptCount < 3) {
+          // 延迟后重试
+          setTimeout(() => {
+            fetchCryptoInfo(cryptoId, attemptCount + 1);
+          }, (attemptCount + 1) * 2000); // 2秒, 4秒, 6秒
         }
-        throw new Error(`Failed to fetch crypto info: ${response.status}`)
+        return;
       }
 
-      // 成功获取数据，重置重试状态
-      setIsRetrying(false)
-      setRetryCount(0)
+      // 设置找到的加密货币
+      setSelectedCrypto(cryptoInfo);
 
-      const data = await response.json()
-      logDebug(`Successfully fetched data for ${cryptoId}:`, data.id);
-
-      // 创建新的加密货币对象
-      const newCrypto: CryptoCurrency = {
-        id: data.id,
-        symbol: data.symbol.toUpperCase(),
-        name: data.name,
-        icon: data.image?.thumb || "",
-        color: "#808080" // 默认颜色
-      }
-
-      logDebug(`Created new crypto object:`, newCrypto);
-
-      // 设置为当前选中的加密货币
-      setSelectedCrypto(newCrypto)
-
-      // 如果这个加密货币不在收藏夹中，添加它
-      if (!favoriteCoins.some(coin => coin.id === newCrypto.id) &&
-        !DEFAULT_CRYPTOCURRENCIES.some(coin => coin.id === newCrypto.id)) {
-        logDebug(`Adding ${newCrypto.id} to favorites`);
-        addToFavorites(newCrypto)
-      }
-
-      // 成功获取信息后，获取价格数据
-      logDebug(`Fetching price data for ${newCrypto.id}`);
-      fetchPriceData()
-    } catch (error: any) {
-      console.error(`Error fetching crypto info for ${cryptoId}:`, error)
-
-      // 如果是 429 错误，并且重试次数小于最大重试次数，则延迟后重试
-      if (error.message && error.message.includes("429") && attemptCount < 3) {
-        logDebug(`Rate limit hit, retrying in ${(attemptCount + 1) * 2} seconds... (Attempt ${attemptCount + 1}/3)`);
-
-        // 显示重试状态
-        setIsLoading(true)
-        setIsRetrying(true)
-        setRetryCount(attemptCount + 1)
-
+      logDebug(`Successfully fetched info for: ${cryptoInfo.name}`);
+    } catch (error) {
+      console.error("Error fetching crypto info:", error);
+      
+      // 如果重试次数小于最大重试次数，则延迟后重试
+      if (attemptCount < 3) {
+        setIsRetrying(true);
+        setRetryCount(attemptCount + 1);
+        
         // 延迟时间随重试次数增加
-        const delayTime = (attemptCount + 1) * 2000 // 2秒, 4秒, 6秒
+        const delayTime = (attemptCount + 1) * 2000; // 2秒, 4秒, 6秒
 
         setTimeout(() => {
-          fetchCryptoInfo(cryptoId, attemptCount + 1)
-        }, delayTime)
+          fetchCryptoInfo(cryptoId, attemptCount + 1);
+        }, delayTime);
 
-        return
+        return;
       }
-
-      // 重置重试状态
-      setIsRetrying(false)
-      setRetryCount(0)
       
-      // 设置占位数据，而不是显示空白
-      logDebug(`Failed to fetch info for ${cryptoId} after retries, showing placeholder data`);
-      
-      // 尝试获取一个合理的基准价格
-      let basePrice = 0;
-      
-      // 如果是已知的加密货币，使用一个合理的默认价格
-      if (cryptoId === 'bitcoin') basePrice = 50000;
-      else if (cryptoId === 'ethereum') basePrice = 3000;
-      else if (cryptoId === 'binancecoin') basePrice = 500;
-      else if (cryptoId === 'solana') basePrice = 100;
-      else if (cryptoId === 'cardano') basePrice = 0.5;
-      else if (cryptoId === 'ripple') basePrice = 0.5;
-      else basePrice = 100; // 默认价格
-      
-      // 设置占位价格数据
-      const placeholderPriceData: PriceData = {
-        current_price: basePrice,
-        price_change_percentage_24h: 0,
-        high_24h: basePrice * 1.05, // 高点比当前价格高5%
-        low_24h: basePrice * 0.95,  // 低点比当前价格低5%
-        total_volume: basePrice * 1000000, // 交易量
-        market_cap: basePrice * 100000000, // 市值
-        last_updated: new Date().toISOString()
-      };
-      
-      setPriceData(placeholderPriceData);
-      setDisplayPrice(basePrice);
-      setPreviousPrice(basePrice);
+      // 如果在重试后仍然失败，则设置错误状态并将用户重定向到默认加密货币
+      setError(`Failed to find cryptocurrency: ${cryptoId}`);
+      setSelectedCrypto(DEFAULT_CRYPTOCURRENCIES[0]);
       setIsLoading(false);
+      setIsRetrying(false);
+      router.push('/bitcoin', { scroll: false });
     }
-  }
+  };
 
   // Format large numbers with commas and abbreviations
   const formatNumber = (num: number, digits = 2) => {
@@ -825,11 +798,16 @@ export default function CryptoPriceTracker({
                         <DropdownMenuItem
                           key={crypto.id}
                           className="flex justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                          onSelect={(e) => {
+                            // 阻止下拉菜单项的默认关闭行为
+                            e.preventDefault();
+                          }}
                         >
                           <div
                             className="flex flex-1 items-center"
-                            onClick={() => {
-                              addToFavorites(crypto);
+                            onClick={(e) => {
+                              // 阻止事件冒泡，避免触发DropdownMenuItem的默认关闭行为
+                              e.stopPropagation();
                               handleCryptoChange(crypto);
                             }}
                           >
@@ -869,7 +847,10 @@ export default function CryptoPriceTracker({
                     {DEFAULT_CRYPTOCURRENCIES.map((crypto) => (
                       <div
                         key={crypto.id}
-                        onClick={() => handleCryptoChange(crypto)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCryptoChange(crypto);
+                        }}
                         className="flex relative flex-col items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 group"
                         title={`${crypto.name} (${crypto.symbol.toUpperCase()})`}
                       >
@@ -908,10 +889,18 @@ export default function CryptoPriceTracker({
                           <DropdownMenuItem
                             key={crypto.id}
                             className="flex justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                            onSelect={(e) => {
+                              // 阻止下拉菜单项的默认关闭行为
+                              e.preventDefault();
+                            }}
                           >
                             <div
                               className="flex flex-1 items-center"
-                              onClick={() => handleCryptoChange(crypto)}
+                              onClick={(e) => {
+                                // 阻止事件冒泡，避免触发DropdownMenuItem的默认关闭行为
+                                e.stopPropagation();
+                                handleCryptoChange(crypto);
+                              }}
                             >
                               {crypto.image ? (
                                 <img 
@@ -1172,4 +1161,3 @@ export default function CryptoPriceTracker({
     </div>
   )
 }
-
