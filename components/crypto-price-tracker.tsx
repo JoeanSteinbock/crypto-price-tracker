@@ -431,35 +431,51 @@ export default function CryptoPriceTracker({
 
     // 根据价格大小调整波动比例
     let fluctuationPercent;
-    if (priceData.current_price < 0.01) {
-      // 对于非常小的价格，使用更大的波动比例
+    let precision;
+    
+    if (priceData.current_price < 0.0001) {
+      fluctuationPercent = Math.random() * 0.4 - 0.2; // ±0.2%
+      precision = 9;
+    } else if (priceData.current_price < 0.001) {
+      fluctuationPercent = Math.random() * 0.3 - 0.15; // ±0.15%
+      precision = 7;
+    } else if (priceData.current_price < 0.01) {
       fluctuationPercent = Math.random() * 0.2 - 0.1; // ±0.1%
+      precision = 6;
+    } else if (priceData.current_price < 0.1) {
+      fluctuationPercent = Math.random() * 0.15 - 0.075; // ±0.075%
+      precision = 5;
     } else if (priceData.current_price < 1) {
-      // 对于小价格，使用适中的波动比例
       fluctuationPercent = Math.random() * 0.1 - 0.05; // ±0.05%
+      precision = 4;
     } else {
-      // 对于正常价格，使用标准波动比例
       fluctuationPercent = Math.random() * 0.04 - 0.02; // ±0.02%
+      precision = 3;
     }
 
     const fluctuationAmount = priceData.current_price * (fluctuationPercent / 100);
 
-    // 计算新的显示价格
-    const newDisplayPrice = displayPrice + fluctuationAmount;
+    // 计算新的显示价格，并根据精度四舍五入
+    const newDisplayPrice = Number((displayPrice + fluctuationAmount).toFixed(precision));
 
     // 确保价格保持在合理范围内（根据价格大小调整偏差范围）
     let maxDeviation;
-    if (priceData.current_price < 0.01) {
-      maxDeviation = priceData.current_price * 0.005; // 0.5% for very small prices
+    if (priceData.current_price < 0.0001) {
+      maxDeviation = priceData.current_price * 0.01; // 1% for extremely small prices
+    } else if (priceData.current_price < 0.001) {
+      maxDeviation = priceData.current_price * 0.008; // 0.8% for very small prices
+    } else if (priceData.current_price < 0.01) {
+      maxDeviation = priceData.current_price * 0.006; // 0.6% for small prices
+    } else if (priceData.current_price < 0.1) {
+      maxDeviation = priceData.current_price * 0.004; // 0.4% for medium-small prices
     } else if (priceData.current_price < 1) {
-      maxDeviation = priceData.current_price * 0.003; // 0.3% for small prices
+      maxDeviation = priceData.current_price * 0.003; // 0.3% for prices under 1
     } else {
       maxDeviation = priceData.current_price * 0.002; // 0.2% for normal prices
     }
 
-    const upperBound = priceData.current_price + maxDeviation;
-    const lowerBound = priceData.current_price - maxDeviation;
-
+    const upperBound = Number((priceData.current_price + maxDeviation).toFixed(precision));
+    const lowerBound = Number((priceData.current_price - maxDeviation).toFixed(precision));
     const boundedPrice = Math.min(Math.max(newDisplayPrice, lowerBound), upperBound);
 
     // Store previous price before updating
@@ -593,19 +609,28 @@ export default function CryptoPriceTracker({
   // Format price with commas
   const formatPrice = (price: number) => {
     // 确定需要显示的小数位数
-    let decimalPlaces = 2; // 默认显示2位小数
+    let decimalPlaces = 3; // 默认显示2位小数
+    let emphasizeDecimals = false; // 是否强调小数部分
 
-    // 根据价格大小动态调整小数位数
+    // 根据价格大小动态调整小数位数和显示策略
     if (price < 0.0001) {
-      decimalPlaces = 8; // 极小价格显示8位小数
+      decimalPlaces = 9; // 极小价格显示9位小数
+      emphasizeDecimals = true;
     } else if (price < 0.001) {
-      decimalPlaces = 6; // 很小价格显示6位小数
+      decimalPlaces = 7; // 很小价格显示7位小数
+      emphasizeDecimals = true;
     } else if (price < 0.01) {
-      decimalPlaces = 5; // 小价格显示5位小数
+      decimalPlaces = 6; // 小价格显示6位小数
+      emphasizeDecimals = true;
     } else if (price < 0.1) {
-      decimalPlaces = 4; // 较小价格显示4位小数
+      decimalPlaces = 5; // 较小价格显示5位小数
+      emphasizeDecimals = true;
     } else if (price < 1) {
-      decimalPlaces = 3; // 小于1的价格显示3位小数
+      decimalPlaces = 4; // 小于1的价格显示4位小数
+      emphasizeDecimals = true;
+    } else {
+      decimalPlaces = 3; // 大于等于1的价格显示2位小数
+      emphasizeDecimals = false;
     }
 
     // 使用toLocaleString格式化价格，应用动态小数位数
@@ -617,7 +642,7 @@ export default function CryptoPriceTracker({
     // 分割为整数部分和小数部分
     const [dollars, cents] = priceStr.split(".")
 
-    return { dollars, cents }
+    return { dollars, cents, emphasizeDecimals }
   }
 
   // Determine if price has increased or decreased
@@ -1006,12 +1031,27 @@ export default function CryptoPriceTracker({
               {!isLoading && priceData && displayPrice !== null ? (
                 <div className="flex items-baseline text-5xl font-bold sm:text-7xl price-display">
                   <span
-                    className={`transition-colors duration-200 ${priceDirection === "up" ? "text-green-500" : priceDirection === "down" ? "text-red-500" : ""
-                      }`}
+                    className={`transition-colors duration-200 ${formatPrice(displayPrice).emphasizeDecimals ? "text-3xl sm:text-5xl opacity-50" : ""} ${
+                      !formatPrice(displayPrice).emphasizeDecimals && priceDirection === "up" 
+                        ? "text-green-500" 
+                        : !formatPrice(displayPrice).emphasizeDecimals && priceDirection === "down" 
+                          ? "text-red-500" 
+                          : ""
+                    }`}
                   >
                     {formatPrice(displayPrice).dollars}
                   </span>
-                  <span className="ml-1 text-2xl sm:text-4xl">.{formatPrice(displayPrice).cents}</span>
+                  <span className={`ml-1 transition-colors duration-200 ${
+                    formatPrice(displayPrice).emphasizeDecimals 
+                      ? `text-5xl sm:text-7xl ${
+                          priceDirection === "up" 
+                            ? "text-green-500" 
+                            : priceDirection === "down" 
+                              ? "text-red-500" 
+                              : ""
+                        }` 
+                      : "text-2xl sm:text-4xl opacity-75"
+                  }`}>.{formatPrice(displayPrice).cents}</span>
                 </div>
               ) : (
                 <div className="flex items-baseline text-5xl font-bold text-gray-300 animate-pulse dark:text-gray-700 sm:text-7xl price-display">
