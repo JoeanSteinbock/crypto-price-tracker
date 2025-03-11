@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
-import { TailwindIndicator } from "@/components/tailwind-indicator"
 import { Header } from "@/components/header"
 import { ClientFooter } from "@/components/client-footer"
 import GoogleAnalytics from "@/components/google-analytics"
@@ -21,9 +20,9 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://cryptotick.live'),
   keywords:
     "cryptocurrency, bitcoin price, ethereum price, crypto tracker, live crypto prices, crypto broadcast, crypto streaming, digital signage, crypto display, large screen crypto, crypto TV display, crypto dashboard, BTC, ETH, SOL, market cap, trading volume, crypto presentation",
-  authors: [{ name: "CryptoTick Team" }],
   creator: "CryptoTick.live",
   publisher: "CryptoTick.live",
   generator: "CryptoTick.live",

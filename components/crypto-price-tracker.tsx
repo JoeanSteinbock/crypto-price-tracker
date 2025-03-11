@@ -311,7 +311,7 @@ export default function CryptoPriceTracker({
     logDebug(`Loading state: ${isLoading}, Has price data: ${priceData !== null}`);
 
     // 只有当路径与当前加密货币不匹配，且已经加载了价格数据时才更新URL
-    if (currentCryptoId !== selectedCrypto.id && !isLoading && priceData !== null) {
+    if (!presentationMode && (currentCryptoId !== selectedCrypto.id && !isLoading && priceData !== null)) {
       logDebug(`Updating URL to: /${selectedCrypto.id}`);
       router.push(`/${selectedCrypto.id}`, { scroll: false })
     }
@@ -585,6 +585,7 @@ export default function CryptoPriceTracker({
       setSelectedCrypto(DEFAULT_CRYPTOCURRENCIES[0]);
       setIsLoading(false);
       setIsRetrying(false);
+      logDebug(`fetchCryptoInfo: Redirecting to default crypto: bitcoin`);
       router.push('/bitcoin', { scroll: false });
     }
   };

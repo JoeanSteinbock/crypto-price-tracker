@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import TOP_CRYPTOCURRENCIES from '@/data/cryptocurrencies'
+import { getServerApiService } from '@/lib/api-service'
 
 export async function GET(
   _request: Request,
@@ -10,6 +11,7 @@ export async function GET(
   // 首先尝试从本地数据获取加密货币信息
   const localCrypto = TOP_CRYPTOCURRENCIES.find(c => c.id === cryptoId)
   console.log('Local crypto:', localCrypto)
+  
   // 如果在本地数据中找到，直接使用本地数据
   if (localCrypto) {
     const manifest = {
@@ -54,23 +56,22 @@ export async function GET(
   
   // 只有在本地数据中找不到时，才尝试从 API 获取
   try {
-    console.log('Fetching crypto info from API')
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`,
-      { next: { revalidate: 86400 } } // 缓存24小时
-    )
+    console.log('Fetching crypto info from API service')
     
-    if (!response.ok) {
+    // 使用服务端API服务获取加密货币信息
+    const apiService = getServerApiService((message) => console.log(`[API Service] ${message}`))
+    const cryptoInfo = await apiService.fetchCryptoInfo(cryptoId)
+    
+    if (!cryptoInfo) {
       throw new Error("Failed to fetch crypto info")
     }
     
-    const data = await response.json()
-    console.log('Fetched crypto info:', {id: cryptoId, name: data.name, symbol: data.symbol, image: data.image})
+    console.log('Fetched crypto info:', cryptoInfo)
     
     const manifest = {
-      name: `${data.name} Price - CryptoTick.live`,
-      short_name: `${data.symbol.toUpperCase()} Price`,
-      description: `Track ${data.name} price in real-time with CryptoTick.live`,
+      name: `${cryptoInfo.name} Price - CryptoTick.live`,
+      short_name: `${cryptoInfo.symbol.toUpperCase()} Price`,
+      description: `Track ${cryptoInfo.name} price in real-time with CryptoTick.live`,
       start_url: `/${cryptoId}`,
       scope: '/',
       display: 'standalone',
@@ -79,20 +80,14 @@ export async function GET(
       orientation: 'landscape',
       icons: [
         {
-          src: data.image?.large || '/logo.svg',
+          src: cryptoInfo.image || '/logo.svg',
           sizes: 'any',
-          type: data.image?.large ? 'image/png' : 'image/svg+xml',
+          type: cryptoInfo.image ? 'image/png' : 'image/svg+xml',
           purpose: 'any'
         },
         {
-          src: data.image?.small || '/icons/icon-192x192.png',
+          src: '/icons/icon-192x192.png',
           sizes: '192x192',
-          type: 'image/png',
-          purpose: 'maskable'
-        },
-        {
-          src: data.image?.thumb || '/icons/icon-192x192.png', 
-          sizes: '128x128',
           type: 'image/png',
           purpose: 'maskable'
         },

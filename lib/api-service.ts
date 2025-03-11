@@ -2,6 +2,10 @@
 export const API_KEY_STORAGE = "cryptotick-api-key";
 export const API_KEY_TYPE_STORAGE = "cryptotick-api-key-type";
 
+// 检查当前环境
+export const isClient = typeof window !== 'undefined';
+export const isServer = !isClient;
+
 // API类型定义
 export type ApiKeyType = "demo" | "pro" | null;
 
@@ -32,29 +36,35 @@ export class ApiService {
   private apiKeyType: ApiKeyType = null;
   private apiCallTimestamps: number[] = [];
   private logDebug: (message: string, data?: any) => void;
+  private isServerSide: boolean;
 
   constructor(
     apiKey: string = "", 
     apiKeyType: ApiKeyType = null,
-    logDebug?: (message: string, data?: any) => void
+    logDebug?: (message: string, data?: any) => void,
+    isServerSide: boolean = false
   ) {
     // 设置日志函数
     this.logDebug = logDebug || ((message: string, data?: any) => {});
+    this.isServerSide = isServerSide;
     
     // 如果构造函数中提供了API密钥和类型，则直接使用
     if (apiKey) {
       this.apiKey = apiKey;
       this.apiKeyType = apiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
       this.logDebug(`ApiService initialized with provided key: ${apiKey.substring(0, 4)}..., type: ${this.apiKeyType}`);
-    } else {
-      // 否则从本地存储加载
+    } else if (!isServerSide) {
+      // 在客户端才尝试从本地存储加载
       this.loadApiKeyFromStorage();
+    } else {
+      // 服务端没有密钥时的消息
+      this.logDebug('Server-side ApiService initialized without API key');
     }
   }
 
   // 从本地存储加载API密钥
   private loadApiKeyFromStorage(): void {
-    if (typeof window === 'undefined') return;
+    if (this.isServerSide) return; // 服务端不尝试从localStorage加载
     
     try {
       const savedApiKey = localStorage.getItem(API_KEY_STORAGE);
@@ -96,6 +106,18 @@ export class ApiService {
     this.apiKey = apiKey;
     this.apiKeyType = apiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
     this.logDebug(`API key set to: ${apiKey.substring(0, 4)}..., type: ${this.apiKeyType}`);
+    
+    // 保存到本地存储 (仅客户端)
+    if (!this.isServerSide) {
+      try {
+        localStorage.setItem(API_KEY_STORAGE, apiKey);
+        if (this.apiKeyType) {
+          localStorage.setItem(API_KEY_TYPE_STORAGE, this.apiKeyType);
+        }
+      } catch (error) {
+        this.logDebug(`Error saving API key to storage: ${error}`);
+      }
+    }
     
     // 重置API调用计数
     this.apiCallTimestamps = [];
@@ -349,16 +371,22 @@ export class ApiService {
   }
 }
 
-// 创建全局单例实例
-let apiServiceInstance: ApiService | null = null;
-
-// 获取API服务实例
+// 客户端获取API服务实例
 export function getApiService(
   logDebug?: (message: string, data?: any) => void
 ): ApiService {
-  if (!apiServiceInstance) {
-    apiServiceInstance = new ApiService("", null, logDebug);
-  }
+  // 这个函数只在客户端使用
+  return new ApiService("", null, logDebug, false);
+}
+
+// 服务端获取API服务实例
+export function getServerApiService(
+  logDebug?: (message: string, data?: any) => void
+): ApiService {
+  // 尝试从环境变量获取API密钥
+  const apiKey = process.env.COINGECKO_API_KEY || "";
+  const apiKeyType = process.env.COINGECKO_API_KEY_TYPE as ApiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
   
-  return apiServiceInstance;
+  // 创建服务端API服务实例
+  return new ApiService(apiKey, apiKeyType, logDebug, true);
 }
