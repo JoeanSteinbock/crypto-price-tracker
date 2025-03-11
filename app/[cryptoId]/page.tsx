@@ -5,8 +5,6 @@ import { getServerApiService } from "@/lib/api-service"
 import CryptoPageClient from "./client-page"
 
 // 添加字符串反转函数
-const reverseString = (str: string) => str.split('').reverse().join('');
-
 export async function generateMetadata({ params }: { params: { cryptoId: string } }): Promise<Metadata> {
   const { cryptoId } = await params
 
@@ -123,14 +121,18 @@ export default async function CryptoPage({
   let apiKeyType: "demo" | "pro" | null = null;
 
   if (typeof api_key === 'string') {
-    // 反转 API key
-    apiKey = reverseString(api_key);
+    // 使用原始的 API key
+    apiKey = api_key;
+    console.log(`Using API key from URL: ${apiKey.substring(0, 4)}...`);
+    
     if (typeof api_type === 'string' && (api_type === 'demo' || api_type === 'pro')) {
       apiKeyType = api_type;
     } else {
       // 根据密钥前缀推断类型
       apiKeyType = apiKey.startsWith('demo_') ? 'demo' : 'pro';
     }
+    
+    console.log(`Using API key type: ${apiKeyType}`);
   }
 
   const presentationMode = pm === "1" || pm === "true"

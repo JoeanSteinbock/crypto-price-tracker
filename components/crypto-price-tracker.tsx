@@ -27,12 +27,12 @@ const logDebug = (message: string, data?: any) => {
   }
 };
 
-export default function CryptoPriceTracker({ 
-  initialCrypto = "bitcoin", 
+export default function CryptoPriceTracker({
+  initialCrypto = "bitcoin",
   presentationMode = false,
   initialApiKey,
   initialApiKeyType
-}: { 
+}: {
   initialCrypto?: string,
   presentationMode?: boolean,
   initialApiKey?: string,
@@ -44,7 +44,7 @@ export default function CryptoPriceTracker({
   const apiIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const microIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastFetchTimeRef = useRef<number>(0)
-  
+
   // 创建API服务实例
   const apiService = useRef(getApiService(logDebug));
   // 存储从URL参数获取的API密钥和类型
@@ -89,12 +89,12 @@ export default function CryptoPriceTracker({
     // 检查URL参数中是否有API密钥和类型
     const apiKeyFromUrl = searchParams.get('api_key');
     const apiTypeFromUrl = searchParams.get('api_type') as ApiKeyType;
-    
+
     if (apiKeyFromUrl) {
       // 保存URL中的API密钥，用于后续API调用
       urlApiKeyRef.current = apiKeyFromUrl;
       logDebug(`Found API key in URL parameters: ${apiKeyFromUrl.substring(0, 4)}...`);
-      
+
       // 如果URL中也提供了类型，则使用它
       if (apiTypeFromUrl && (apiTypeFromUrl === 'demo' || apiTypeFromUrl === 'pro')) {
         urlApiKeyTypeRef.current = apiTypeFromUrl;
@@ -104,10 +104,10 @@ export default function CryptoPriceTracker({
         urlApiKeyTypeRef.current = apiKeyFromUrl.startsWith('demo_') ? 'demo' : 'pro';
         logDebug(`No API key type in URL, defaulting to: ${urlApiKeyTypeRef.current}`);
       }
-      
-      // 直接设置API密钥到服务
+
+      // 直接设置API密钥到服务（使用原始的API key，不需要反转）
       apiService.current.setApiKey(apiKeyFromUrl, urlApiKeyTypeRef.current);
-      
+
       // 触发自定义事件以通知其他组件
       const event = new CustomEvent(API_KEY_STORAGE, {
         detail: {
@@ -116,8 +116,6 @@ export default function CryptoPriceTracker({
         }
       });
       window.dispatchEvent(event);
-      
-      // 可以考虑添加一个提示，询问用户是否要保存此URL中的API密钥到本地存储
     }
   }, [searchParams]);
 
@@ -127,29 +125,29 @@ export default function CryptoPriceTracker({
       const customEvent = event as CustomEvent;
       const newApiKey = customEvent.detail?.apiKey || "";
       const newApiKeyType = customEvent.detail?.apiKeyType || null;
-      
+
       logDebug(`API key changed via event: ${newApiKey ? "New key set" : "Key cleared"}, Type: ${newApiKeyType || "none"}`);
-      
+
       // 更新API服务
       apiService.current.setApiKey(newApiKey, newApiKeyType as ApiKeyType);
-      
+
       // 立即获取数据以测试新密钥
       fetchPriceData();
     };
-    
+
     // 添加事件监听器
     window.addEventListener(API_KEY_STORAGE, handleApiKeyChange);
-    
+
     // 清理函数
     return () => {
       window.removeEventListener(API_KEY_STORAGE, handleApiKeyChange);
-      
+
       // 确保组件卸载时清除所有间隔
       if (apiIntervalRef.current) {
         clearInterval(apiIntervalRef.current);
         apiIntervalRef.current = null;
       }
-      
+
       if (microIntervalRef.current) {
         clearInterval(microIntervalRef.current);
         microIntervalRef.current = null;
@@ -240,10 +238,10 @@ export default function CryptoPriceTracker({
       setAvailableCryptos([...TOP_CRYPTOCURRENCIES, ...updatedFavorites.filter(
         coin => !TOP_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
       )])
-      
+
       // 保存到本地存储
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFavorites))
-      
+
       // 发送Google Analytics事件
       try {
         // 检查用户是否已同意Cookie
@@ -265,10 +263,10 @@ export default function CryptoPriceTracker({
     logDebug(`Removing ${cryptoId} from favorites`);
     const updatedFavorites = favoriteCoins.filter(coin => coin.id !== cryptoId)
     setFavoriteCoins(updatedFavorites)
-    
+
     // Save to local storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFavorites))
-    
+
     // If the currently selected crypto is removed, switch to bitcoin
     if (selectedCrypto.id === cryptoId) {
       handleCryptoChange(DEFAULT_CRYPTOCURRENCIES[0])
@@ -278,7 +276,7 @@ export default function CryptoPriceTracker({
     setAvailableCryptos([...TOP_CRYPTOCURRENCIES, ...updatedFavorites.filter(
       coin => !TOP_CRYPTOCURRENCIES.some(defaultCoin => defaultCoin.id === coin.id)
     )])
-    
+
     // 发送Google Analytics事件
     try {
       // 检查用户是否已同意Cookie
@@ -337,7 +335,7 @@ export default function CryptoPriceTracker({
 
       // 使用API服务获取价格数据
       const newPriceData = await apiService.current.fetchPriceData(selectedCrypto.id);
-      
+
       if (!newPriceData) {
         if (retryCount < 3) {
           // 如果是速率限制问题，延迟后重试
@@ -380,12 +378,12 @@ export default function CryptoPriceTracker({
       logDebug(`Price data updated: ${newPriceData.current_price}`);
     } catch (error: any) {
       console.error("Error fetching price data:", error);
-      
+
       // 如果重试次数小于最大重试次数，则延迟后重试
       if (retryCount < 3) {
         setIsRetrying(true);
         setRetryCount(retryCount + 1);
-        
+
         logDebug(`Retrying price data in ${(retryCount + 1) * 2} seconds... (Attempt ${retryCount + 1}/3)`);
 
         // 延迟时间随重试次数增加
@@ -408,20 +406,20 @@ export default function CryptoPriceTracker({
   useEffect(() => {
     // 获取轮询间隔时间
     const pollInterval = apiService.current.getPollingInterval();
-    
+
     // 清除现有轮询
     if (apiIntervalRef.current) {
       clearInterval(apiIntervalRef.current);
     }
-    
+
     // 立即获取初始数据
     fetchPriceData();
-    
+
     // 设置新轮询
     apiIntervalRef.current = setInterval(fetchPriceData, pollInterval);
-    
+
     logDebug(`API polling set up with interval: ${pollInterval}ms`);
-    
+
     // 清理函数
     return () => {
       if (apiIntervalRef.current) {
@@ -494,12 +492,12 @@ export default function CryptoPriceTracker({
     if (priceData && previousPrice !== null && previousPrice !== priceData.current_price) {
       // Animate price
       setAnimatingPrice(true)
-      
+
       // Use a timeout to end animation
       const timeout = setTimeout(() => {
         setAnimatingPrice(false)
       }, 2000)
-      
+
       return () => clearTimeout(timeout)
     }
   }, [priceData, previousPrice])
@@ -508,16 +506,16 @@ export default function CryptoPriceTracker({
   const handleCryptoChange = (crypto: CryptoCurrency) => {
     if (crypto.id !== selectedCrypto.id) {
       logDebug(`User selected new crypto: ${crypto.id}`);
-      
+
       // Reset states
       setIsLoading(true)
       setError(null)
       setRetryCount(0)
       setIsRetrying(false)
-      
+
       // Update selected crypto
       setSelectedCrypto(crypto)
-      
+
       // 发送Google Analytics事件
       try {
         // 检查用户是否已同意Cookie
@@ -551,7 +549,7 @@ export default function CryptoPriceTracker({
 
       // 使用API服务获取加密货币信息
       const cryptoInfo = await apiService.current.fetchCryptoInfo(cryptoId);
-      
+
       if (!cryptoInfo) {
         if (attemptCount < 3) {
           // 延迟后重试
@@ -568,12 +566,12 @@ export default function CryptoPriceTracker({
       logDebug(`Successfully fetched info for: ${cryptoInfo.name}`);
     } catch (error) {
       console.error("Error fetching crypto info:", error);
-      
+
       // 如果重试次数小于最大重试次数，则延迟后重试
       if (attemptCount < 3) {
         setIsRetrying(true);
         setRetryCount(attemptCount + 1);
-        
+
         // 延迟时间随重试次数增加
         const delayTime = (attemptCount + 1) * 2000; // 2秒, 4秒, 6秒
 
@@ -583,7 +581,7 @@ export default function CryptoPriceTracker({
 
         return;
       }
-      
+
       // 如果在重试后仍然失败，则设置错误状态并将用户重定向到默认加密货币
       setError(`Failed to find cryptocurrency: ${cryptoId}`);
       setSelectedCrypto(DEFAULT_CRYPTOCURRENCIES[0]);
@@ -666,7 +664,7 @@ export default function CryptoPriceTracker({
     if (presentationMode) {
       // 检查是否在演示容器中
       const isInDemoContainer = document.querySelector('.demo-container') !== null;
-      
+
       // 只有在不是演示容器中时才添加演示模式类到 body
       if (!isInDemoContainer) {
         document.body.classList.add('presentation-mode');
@@ -698,7 +696,7 @@ export default function CryptoPriceTracker({
         const now = new Date();
         // 添加8小时得到 UTC+8 时间
         const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-        
+
         // 格式化日期和时间
         const year = utc8Time.getUTCFullYear();
         const month = (utc8Time.getUTCMonth() + 1).toString().padStart(2, '0');
@@ -706,24 +704,26 @@ export default function CryptoPriceTracker({
         const hours = utc8Time.getUTCHours().toString().padStart(2, '0');
         const minutes = utc8Time.getUTCMinutes().toString().padStart(2, '0');
         const seconds = utc8Time.getUTCSeconds().toString().padStart(2, '0');
-        
+
         setCurrentTime(`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`);
       };
-      
+
       // 立即更新一次
       updateTime();
-      
+
       // 每秒更新一次
       const timeInterval = setInterval(updateTime, 1000);
-      
+
       return () => clearInterval(timeInterval);
     }
   }, [presentationMode]);
 
   // 初始化时设置 API key（如果提供）
   useEffect(() => {
-    if (initialApiKey && initialApiKeyType) {
-      apiService.current.setApiKey(initialApiKey, initialApiKeyType);
+    if (initialApiKey) {
+      logDebug(`Setting initial API key: ${initialApiKey.substring(0, 4)}..., type: ${initialApiKeyType}`);
+      // 使用原始的 API key，不需要反转
+      apiService.current.setApiKey(initialApiKey, initialApiKeyType || 'pro');
     }
   }, [initialApiKey, initialApiKeyType]);
 
@@ -738,7 +738,7 @@ export default function CryptoPriceTracker({
             <span className="text-xs opacity-70">(UTC+8)</span>
           </div>
         )}
-        
+
         <div className="relative w-full max-w-3xl h-auto">
           {/* 将图表移到最上层，使用更高的z-index */}
           <div className="absolute inset-0 z-20 pointer-events-none">
@@ -824,10 +824,10 @@ export default function CryptoPriceTracker({
                             }}
                           >
                             {crypto.image ? (
-                              <img 
+                              <img
                                 src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
-                                alt={crypto.name} 
-                                className="mr-2 w-5 h-5" 
+                                alt={crypto.name}
+                                className="mr-2 w-5 h-5"
                               />
                             ) : crypto.icon && crypto.icon.startsWith('http') ? (
                               <img src={crypto.icon} alt={crypto.name} className="mr-2 w-5 h-5" />
@@ -867,7 +867,7 @@ export default function CryptoPriceTracker({
                         title={`${crypto.name} (${crypto.symbol.toUpperCase()})`}
                       >
                         {crypto.image ? (
-                          <img 
+                          <img
                             src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
                             alt={crypto.name}
                             className="w-8 h-8 rounded-full"
@@ -915,10 +915,10 @@ export default function CryptoPriceTracker({
                               }}
                             >
                               {crypto.image ? (
-                                <img 
+                                <img
                                   src={crypto.image.startsWith('http') ? crypto.image : `https://assets.coingecko.com/coins${crypto.image}`}
-                                  alt={crypto.name} 
-                                  className="mr-2 w-5 h-5" 
+                                  alt={crypto.name}
+                                  className="mr-2 w-5 h-5"
                                 />
                               ) : crypto.icon && crypto.icon.startsWith('http') ? (
                                 <img src={crypto.icon} alt={crypto.name} className="mr-2 w-5 h-5" />
@@ -1152,7 +1152,7 @@ export default function CryptoPriceTracker({
                 className="h-5 dark:invert"
               />
             </a>
-            
+
             {/* 支持按钮 - 中间 */}
             <div className="flex flex-1 justify-center mx-4">
               <DonationButton />

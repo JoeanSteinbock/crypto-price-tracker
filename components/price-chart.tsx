@@ -56,6 +56,21 @@ export function PriceChart({ currentPrice, cryptoId }: PriceChartProps) {
   // Create API service instance
   const apiService = useRef(getApiService(logChartDebug))
 
+  // 从 URL 参数获取 API key
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const apiKeyFromUrl = searchParams.get('api_key');
+    const apiTypeFromUrl = searchParams.get('api_type') as "demo" | "pro" | null;
+    
+    if (apiKeyFromUrl) {
+      logChartDebug(`Setting API key from URL: ${apiKeyFromUrl.substring(0, 4)}...`);
+      apiService.current.setApiKey(
+        apiKeyFromUrl,
+        apiTypeFromUrl || (apiKeyFromUrl.startsWith('demo_') ? 'demo' : 'pro')
+      );
+    }
+  }, []);
+
   // Initialize with historical data - only once per crypto
   useEffect(() => {
     // Prevent multiple fetches for the same crypto

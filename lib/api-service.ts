@@ -9,6 +9,8 @@ export const isServer = !isClient;
 // API类型定义
 export type ApiKeyType = "demo" | "pro" | null;
 
+export const reverseString = (str: string) => str.split('').reverse().join('');
+
 // 价格数据类型
 export type PriceData = {
   current_price: number;
@@ -39,17 +41,20 @@ export class ApiService {
   private isServerSide: boolean;
 
   constructor(
-    apiKey: string = "", 
+    apiKey: string = "",
     apiKeyType: ApiKeyType = null,
     logDebug?: (message: string, data?: any) => void,
     isServerSide: boolean = false
   ) {
     // 设置日志函数
-    this.logDebug = logDebug || ((message: string, data?: any) => {});
+    this.logDebug = logDebug || ((message: string, data?: any) => { });
     this.isServerSide = isServerSide;
-    
+
     // 如果构造函数中提供了API密钥和类型，则直接使用
     if (apiKey) {
+      if (apiKey.endsWith("-GC")) {
+        apiKey = reverseString(apiKey);
+      }
       this.apiKey = apiKey;
       this.apiKeyType = apiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
       this.logDebug(`ApiService initialized with provided key: ${apiKey.substring(0, 4)}..., type: ${this.apiKeyType}`);
@@ -65,12 +70,15 @@ export class ApiService {
   // 从本地存储加载API密钥
   private loadApiKeyFromStorage(): void {
     if (this.isServerSide) return; // 服务端不尝试从localStorage加载
-    
+
     try {
-      const savedApiKey = localStorage.getItem(API_KEY_STORAGE);
+      let savedApiKey = localStorage.getItem(API_KEY_STORAGE);
       if (savedApiKey) {
+        if (savedApiKey.endsWith("-GC")) {
+          savedApiKey = reverseString(savedApiKey);
+        }
         this.apiKey = savedApiKey;
-        
+
         // 尝试加载API密钥类型
         const savedApiKeyType = localStorage.getItem(API_KEY_TYPE_STORAGE) as ApiKeyType;
         if (savedApiKeyType && (savedApiKeyType === 'demo' || savedApiKeyType === 'pro')) {
@@ -79,7 +87,7 @@ export class ApiService {
           // 根据API密钥前缀推断类型
           this.apiKeyType = savedApiKey.startsWith('demo_') ? 'demo' : 'pro';
         }
-        
+
         this.logDebug(`Loaded API key from storage: ${savedApiKey.substring(0, 4)}..., type: ${this.apiKeyType}`);
       } else {
         this.logDebug('No API key found in storage, using free tier');
@@ -102,11 +110,15 @@ export class ApiService {
       this.logDebug('API key cleared');
       return;
     }
-    
+
+    if (apiKey && apiKey.endsWith("-GC")) {
+      apiKey = reverseString(apiKey);
+    }
+
     this.apiKey = apiKey;
     this.apiKeyType = apiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
     this.logDebug(`API key set to: ${apiKey.substring(0, 4)}..., type: ${this.apiKeyType}`);
-    
+
     // 保存到本地存储 (仅客户端)
     if (!this.isServerSide) {
       try {
@@ -118,7 +130,7 @@ export class ApiService {
         this.logDebug(`Error saving API key to storage: ${error}`);
       }
     }
-    
+
     // 重置API调用计数
     this.apiCallTimestamps = [];
   }
@@ -127,18 +139,18 @@ export class ApiService {
   public checkRateLimit(): boolean {
     const now = Date.now();
     const oneMinuteAgo = now - 60000; // 1分钟前
-    
+
     // 移除超过1分钟的时间戳
     this.apiCallTimestamps = this.apiCallTimestamps.filter(
       timestamp => timestamp > oneMinuteAgo
     );
-    
+
     // 检查是否超过速率限制
     const callsInLastMinute = this.apiCallTimestamps.length;
-    
+
     // 根据 API 密钥类型确定速率限制
     let rateLimit = 10; // 默认免费 API
-    
+
     if (this.apiKey) {
       if (this.apiKeyType === "demo") {
         rateLimit = 30; // Demo API 密钥
@@ -150,12 +162,12 @@ export class ApiService {
     } else {
       this.logDebug('Using Free API rate limit: 10 calls/min');
     }
-    
+
     if (callsInLastMinute >= rateLimit) {
       this.logDebug(`Rate limit reached: ${callsInLastMinute}/${rateLimit} calls in the last minute`);
       return false;
     }
-    
+
     // 记录这次调用
     this.apiCallTimestamps.push(now);
     return true;
@@ -172,7 +184,7 @@ export class ApiService {
         return 6000; // Pro API 6秒
       }
     }
-    
+
     this.logDebug('Using Free API polling interval: 15 seconds');
     return 15000; // 免费 API 15秒
   }
@@ -181,7 +193,7 @@ export class ApiService {
   private prepareApiRequest(endpointUrl: string): { url: string; headers: HeadersInit } {
     let apiUrl = endpointUrl;
     const headers: HeadersInit = {};
-    
+
     if (this.apiKey) {
       if (this.apiKeyType === "demo") {
         // Demo API 使用 x-cg-demo-api-key 请求头
@@ -196,7 +208,7 @@ export class ApiService {
     } else {
       this.logDebug('Using Free API without API key');
     }
-    
+
     return { url: apiUrl, headers };
   }
 
@@ -207,17 +219,17 @@ export class ApiService {
       this.logDebug(`Invalid API key, clearing`);
       this.apiKey = "";
       this.apiKeyType = null;
-      
+
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_KEY_STORAGE);
         localStorage.removeItem(API_KEY_TYPE_STORAGE);
-        
+
         // 发送事件通知其他组件 API 密钥已被清除
-        const event = new CustomEvent('apikey-changed', { 
-          detail: { 
+        const event = new CustomEvent('apikey-changed', {
+          detail: {
             apiKey: "",
             apiKeyType: null
-          } 
+          }
         });
         window.dispatchEvent(event);
       }
@@ -230,20 +242,20 @@ export class ApiService {
       this.logDebug(`Skipping API call due to rate limit`);
       return null;
     }
-    
+
     const endpointUrl = `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
     const { url, headers } = this.prepareApiRequest(endpointUrl);
-    
+
     try {
       const response = await fetch(url, { headers });
-      
+
       if (!response.ok) {
         this.handleApiError(null, response.status);
         throw new Error(`Failed to fetch data: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       return {
         current_price: data.market_data.current_price.usd,
         price_change_percentage_24h: data.market_data.price_change_percentage_24h,
@@ -264,25 +276,25 @@ export class ApiService {
     if (!term || term.length < 2) {
       return [];
     }
-    
+
     if (!this.checkRateLimit()) {
       this.logDebug(`Skipping search API call due to rate limit`);
       return [];
     }
-    
+
     const endpointUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(term)}`;
     const { url, headers } = this.prepareApiRequest(endpointUrl);
-    
+
     try {
       const response = await fetch(url, { headers });
-      
+
       if (!response.ok) {
         this.handleApiError(null, response.status);
         throw new Error(`Failed to search: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // 转换为标准格式
       return data.coins.slice(0, 10).map((coin: any) => ({
         id: coin.id,
@@ -304,20 +316,20 @@ export class ApiService {
       this.logDebug(`Skipping API call due to rate limit`);
       return null;
     }
-    
+
     const endpointUrl = `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`;
     const { url, headers } = this.prepareApiRequest(endpointUrl);
-    
+
     try {
       const response = await fetch(url, { headers });
-      
+
       if (!response.ok) {
         this.handleApiError(null, response.status);
         throw new Error(`Failed to fetch crypto info: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       return {
         id: data.id,
         symbol: data.symbol.toLowerCase(),
@@ -326,7 +338,7 @@ export class ApiService {
         image: data.image?.large || data.image?.small || "",
         color: "#808080" // 默认颜色
       };
-      
+
     } catch (error) {
       this.handleApiError(error);
       return null;
@@ -334,35 +346,35 @@ export class ApiService {
   }
 
   // 获取加密货币历史价格数据
-  public async fetchHistoricalData(cryptoId: string, days: number = 1): Promise<{timestamp: number, price: number}[]> {
+  public async fetchHistoricalData(cryptoId: string, days: number = 1): Promise<{ timestamp: number, price: number }[]> {
     if (!this.checkRateLimit()) {
       this.logDebug(`Skipping historical data API call due to rate limit`);
       return [];
     }
-    
+
     const endpointUrl = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart?vs_currency=usd&days=${days}`;
     const { url, headers } = this.prepareApiRequest(endpointUrl);
-    
+
     try {
       this.logDebug(`Fetching historical data for ${cryptoId}, days: ${days}`);
-      const response = await fetch(url, { 
+      const response = await fetch(url, {
         headers,
         cache: 'no-store' // 禁用缓存以获取新数据
       });
-      
+
       if (!response.ok) {
         this.handleApiError(null, response.status);
         throw new Error(`Failed to fetch historical data: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // 返回格式化的数据
       return data.prices.map((item: [number, number]) => ({
         timestamp: item[0],
         price: item[1],
       }));
-      
+
     } catch (error) {
       this.handleApiError(error);
       this.logDebug(`Error fetching historical data: ${error}`);
@@ -386,7 +398,7 @@ export function getServerApiService(
   // 尝试从环境变量获取API密钥
   const apiKey = process.env.COINGECKO_API_KEY || "";
   const apiKeyType = process.env.COINGECKO_API_KEY_TYPE as ApiKeyType || (apiKey.startsWith('demo_') ? 'demo' : 'pro');
-  
+
   // 创建服务端API服务实例
   return new ApiService(apiKey, apiKeyType, logDebug, true);
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { API_KEY_STORAGE, API_KEY_TYPE_STORAGE } from '@/lib/api-service';
+import { API_KEY_STORAGE, API_KEY_TYPE_STORAGE, reverseString } from '@/lib/api-service';
 
 type ApiKeyType = "demo" | "pro";
 
@@ -12,9 +12,6 @@ interface ApiSettingsModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-// 添加字符串反转函数
-const reverseString = (str: string) => str.split('').reverse().join('');
 
 export function ApiSettingsModal({ open, onClose }: ApiSettingsModalProps) {
   const [apiKey, setApiKey] = useState("");
@@ -133,7 +130,7 @@ export function ApiSettingsModal({ open, onClose }: ApiSettingsModalProps) {
           )}
           
           {urlApiKeyDetected && (
-            <div className="p-2 text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
+            <div className="p-2 text-sm text-blue-700 bg-blue-50 rounded-md border border-blue-200">
               API key detected from URL parameters. Save to store it locally.
             </div>
           )}
@@ -178,7 +175,7 @@ export function ApiSettingsModal({ open, onClose }: ApiSettingsModalProps) {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Enter your CoinGecko API key"
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500">
               Leave empty to use free API with limited calls
