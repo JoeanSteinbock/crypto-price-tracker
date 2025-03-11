@@ -10,16 +10,22 @@ const CryptoPriceTrackerNoSSR = dynamic(
 
 export default function CryptoPageClient({ 
   cryptoId, 
-  presentationMode 
+  presentationMode,
+  initialApiKey,
+  initialApiKeyType
 }: { 
-  cryptoId: string; 
+  cryptoId: string;
   presentationMode: boolean;
+  initialApiKey?: string;
+  initialApiKeyType?: "demo" | "pro" | null;
 }) {
   return (
     <div className="flex overflow-hidden relative h-screen">
       <CryptoPriceTrackerNoSSR
         initialCrypto={cryptoId}
         presentationMode={presentationMode}
+        initialApiKey={initialApiKey}
+        initialApiKeyType={initialApiKeyType}
       />
     </div>
   )

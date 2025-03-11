@@ -29,10 +29,14 @@ const logDebug = (message: string, data?: any) => {
 
 export default function CryptoPriceTracker({ 
   initialCrypto = "bitcoin", 
-  presentationMode = false 
+  presentationMode = false,
+  initialApiKey,
+  initialApiKeyType
 }: { 
   initialCrypto?: string,
-  presentationMode?: boolean
+  presentationMode?: boolean,
+  initialApiKey?: string,
+  initialApiKeyType?: "demo" | "pro" | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -715,6 +719,13 @@ export default function CryptoPriceTracker({
       return () => clearInterval(timeInterval);
     }
   }, [presentationMode]);
+
+  // 初始化时设置 API key（如果提供）
+  useEffect(() => {
+    if (initialApiKey && initialApiKeyType) {
+      apiService.current.setApiKey(initialApiKey, initialApiKeyType);
+    }
+  }, [initialApiKey, initialApiKeyType]);
 
   return (
     <div className={`relative ${!presentationMode ? 'min-h-screen w-[100vw]' : ''}`}>

@@ -4,6 +4,9 @@ import { generateKeywords } from "@/app/metadata"
 import { getServerApiService } from "@/lib/api-service"
 import CryptoPageClient from "./client-page"
 
+// 添加字符串反转函数
+const reverseString = (str: string) => str.split('').reverse().join('');
+
 export async function generateMetadata({ params }: { params: { cryptoId: string } }): Promise<Metadata> {
   const { cryptoId } = await params
 
@@ -105,12 +108,41 @@ export async function generateMetadata({ params }: { params: { cryptoId: string 
   }
 }
 
-export default async function CryptoPage({ params, searchParams }: { params: { cryptoId: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function CryptoPage({ 
+  params, 
+  searchParams 
+}: { 
+  params: { cryptoId: string }, 
+  searchParams: { [key: string]: string | string[] | undefined } 
+}) {
   const { cryptoId } = await params
-  const { pm } = await searchParams
-  const presentationMode = pm === "1" || pm === "true"
+  const { pm, api_key, api_type } = await searchParams
 
-  return <CryptoPageClient cryptoId={cryptoId} presentationMode={presentationMode} />
+  // 处理 API key 参数（如果存在）
+  let apiKey = "";
+  let apiKeyType: "demo" | "pro" | null = null;
+
+  if (typeof api_key === 'string') {
+    // 反转 API key
+    apiKey = reverseString(api_key);
+    if (typeof api_type === 'string' && (api_type === 'demo' || api_type === 'pro')) {
+      apiKeyType = api_type;
+    } else {
+      // 根据密钥前缀推断类型
+      apiKeyType = apiKey.startsWith('demo_') ? 'demo' : 'pro';
+    }
+  }
+
+  const presentationMode = pm === "1" || pm === "true"
+  
+  return (
+    <CryptoPageClient 
+      cryptoId={cryptoId} 
+      presentationMode={presentationMode}
+      initialApiKey={apiKey}
+      initialApiKeyType={apiKeyType}
+    />
+  )
 }
 
 // 生成所有已知加密货币的静态路径，提高性能

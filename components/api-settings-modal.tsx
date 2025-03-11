@@ -13,6 +13,9 @@ interface ApiSettingsModalProps {
   onClose: () => void;
 }
 
+// 添加字符串反转函数
+const reverseString = (str: string) => str.split('').reverse().join('');
+
 export function ApiSettingsModal({ open, onClose }: ApiSettingsModalProps) {
   const [apiKey, setApiKey] = useState("");
   const [apiKeyType, setApiKeyType] = useState<ApiKeyType>("pro");
@@ -28,14 +31,15 @@ export function ApiSettingsModal({ open, onClose }: ApiSettingsModalProps) {
       const apiTypeFromUrl = searchParams.get('api_type') as ApiKeyType;
       
       if (apiKeyFromUrl) {
-        setApiKey(apiKeyFromUrl);
+        // 如果是从 URL 参数获取的 API key，需要先反转回来
+        setApiKey(reverseString(apiKeyFromUrl));
         setUrlApiKeyDetected(true);
         
         if (apiTypeFromUrl && (apiTypeFromUrl === 'demo' || apiTypeFromUrl === 'pro')) {
           setApiKeyType(apiTypeFromUrl);
         } else {
           // 根据密钥前缀推断类型
-          setApiKeyType(apiKeyFromUrl.startsWith('demo_') ? 'demo' : 'pro');
+          setApiKeyType(reverseString(apiKeyFromUrl).startsWith('demo_') ? 'demo' : 'pro');
         }
       } else {
         // 如果 URL 中没有参数，从本地存储中加载
